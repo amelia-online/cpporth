@@ -43,7 +43,9 @@ enum class TokenType
     BIKESHEDDER,
     ASSERT,
     IFSTAR,
-    HERE
+    HERE,
+    END_OF_FILE,
+    SYSCALLN,
 };
 
 class Token
@@ -54,6 +56,7 @@ public:
     TokenType type;
     std::string content;
     Token(int, int, TokenType, std::string);
+    std::string toString();
 };
 
 class Lexer
@@ -75,6 +78,7 @@ public:
     Token lexString();
     bool isComment();
     Token lexOperator();
+    Token lexBikeshedder();
 };
 
 #endif //LEXER_H
