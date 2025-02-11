@@ -45,6 +45,12 @@ std::vector<Token> Lexer::lex()
 
         else if (operators.find(ch) != std::string::npos)
             tokens.push_back(lexOperator());
+        
+        else if (ch == '"')
+            tokens.push_back(lexString());
+
+        else if (ch == '\'')
+            tokens.push_back(lexChar());
 
         else if (digits.find(ch) != std::string::npos)
         {
@@ -62,6 +68,60 @@ std::vector<Token> Lexer::lex()
     }
     tokens.push_back(Token(index, index, TokenType::END_OF_FILE, "EOF"));
     return tokens;
+}
+
+Token Lexer::lexString()
+{
+    int idx = index;
+    std::string acc;
+    int qCount = 0;
+    bool escape = false;
+    while (idx < input.length())
+    {
+        char c = input[idx];
+
+        if (escape)
+        {
+            acc.push_back(c);
+            idx++;
+            escape = false;
+            continue;
+        }
+
+        if (c == '\\')
+            escape = true;
+
+        if (c == '\"')
+        {
+            qCount++;
+            if (qCount >= 2)
+            {
+                acc.push_back(c);
+                break;
+            }
+        }
+
+        acc.push_back(c);
+        idx++;
+    }
+    
+    TokenType tt = TokenType::STRING;
+    idx++;
+    if (input[idx] == 'c')
+    {
+        acc.push_back('c');
+        tt = TokenType::CSTRING;
+        idx++;
+    }
+
+    Token t(index, idx, tt, acc);
+    index = idx;
+    return t;
+}
+
+Token Lexer::lexChar()
+{
+
 }
 
 Token Lexer::lexOperator()

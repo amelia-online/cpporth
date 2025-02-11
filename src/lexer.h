@@ -34,7 +34,6 @@ enum class TokenType
     INLINE,
     PTR,
     CONST,
-    MEMOP,
     LET,
     PEEK,
     OFFSET,
@@ -80,6 +79,7 @@ public:
     bool lexHex(Token&);
     Token lexInt();
     Token lexString();
+    Token lexChar();
     bool isComment();
     Token lexOperator();
 };
