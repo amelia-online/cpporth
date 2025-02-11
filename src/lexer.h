@@ -26,6 +26,7 @@ enum class TokenType
     OVER,
     OP,
     MAX,
+    MIN,
     MEMORY,
     ELSE,
     DO,
@@ -46,6 +47,7 @@ enum class TokenType
     HERE,
     END_OF_FILE,
     SYSCALLN,
+    CHAR,
 };
 
 class Token
@@ -56,6 +58,7 @@ public:
     TokenType type;
     std::string content;
     Token(int, int, TokenType, std::string);
+    Token();
     std::string toString();
 };
 
@@ -65,6 +68,7 @@ class Lexer
    size_t index;
    const std::string alphabet = "abcdefghjiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
    const std::string digits = "0123456789";
+   const std::string operators = "+-*!@";
 public:
     Lexer(std::string);
     std::vector<Token> lex();
@@ -73,12 +77,11 @@ public:
     char offset(size_t);
     char ahead();
     Token lexKeyword();
-    Token lexHex();
-    Token lexFloat();
+    bool lexHex(Token&);
+    Token lexInt();
     Token lexString();
     bool isComment();
     Token lexOperator();
-    Token lexBikeshedder();
 };
 
 #endif //LEXER_H

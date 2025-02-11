@@ -1,11 +1,15 @@
 #include "lexer.h"
 #include <format>
+#include <algorithm>
 
-Token::Token(int start, int end, TokenType type, std::string content) : start(start), end(end), 
-    type(type), content(content) {;}
+Token::Token(int start, int end, TokenType type, std::string content) : start(start), end(end), type(type), content(content) {;}
+
+Token::Token() : start(-1), end(-1), type(TokenType::VAR), content("") {;}
 
 std::string Token::toString()
 {
+    if (type == TokenType::NEWLINE)
+        return "NEWLINE";
     return content;
 }
 
@@ -14,8 +18,8 @@ Lexer::Lexer(std::string input) : input(input), index(0) {;}
 std::vector<Token> Lexer::lex()
 {
     std::vector<Token> tokens;
-
-    while (index < input.size())
+    
+    while (index < input.length())
     {
         char ch = peek();
 
@@ -38,10 +42,21 @@ std::vector<Token> Lexer::lex()
 
         if (alphabet.find(ch) != std::string::npos)    
             tokens.push_back(lexKeyword());
-    
+
+        else if (operators.find(ch) != std::string::npos)
+            tokens.push_back(lexOperator());
+
         else if (digits.find(ch) != std::string::npos)
         {
-
+            Token hex;
+            if (ch == '0')
+            {
+                if (lexHex(hex))
+                    tokens.push_back(hex);
+                else tokens.push_back(lexInt());
+            }
+            else
+                tokens.push_back(lexInt());
         }
 
     }
@@ -49,11 +64,45 @@ std::vector<Token> Lexer::lex()
     return tokens;
 }
 
+Token Lexer::lexOperator()
+{
+    int idx = index;
+    std::string acc;
+    std::string allowed = "0123456789=<>" + operators;
+    std::vector<std::string> recognized = {"<", ">", "=", "!=", ">=", "<=",
+        "+", "-", "*", "--", "!8", "@8", "!16", "@16", "!32", "@32", "!64", "@64"};
+
+    while (idx < input.length())
+    {
+        char c = input[idx];
+        if (allowed.find(c) == std::string::npos)
+            break;
+        acc.push_back(c);
+        idx++;
+    }
+
+    TokenType tt;
+
+    if (std::find(recognized.begin(), recognized.end(), acc) == recognized.end())
+    {
+        std::cout << "Lex error: unrecognized operator: " << acc << std::endl;
+        throw new std::exception();
+    } 
+    else if (acc == "--")
+        tt = TokenType::BIKESHEDDER;
+    else
+        tt = TokenType::OP;
+
+    Token t(index, idx, tt, acc);
+    index = idx;
+    return t;
+}
+
 Token Lexer::lexKeyword()
 {
     int idx = index;
     std::string acc;
-    std::string allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-*()";
+    std::string allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-*()+.";
 
     while (idx < input.length())
     {
@@ -119,6 +168,12 @@ Token Lexer::lexKeyword()
         tt = TokenType::HERE;
     else if (acc == "ptr")
         tt = TokenType::PTR;
+    else if (acc == "else")
+        tt = TokenType::ELSE;
+    else if (acc == "max")
+        tt = TokenType::MAX;
+    else if (acc == "min")
+        tt = TokenType::MIN;
     else if (acc == "cast(int)" || acc == "cast(bool)" || acc == "cast(ptr)" 
         || acc == "and" || acc == "or" || acc == "not" || acc == "shr" || acc == "shl")
         tt = TokenType::OP;
@@ -131,6 +186,58 @@ Token Lexer::lexKeyword()
     Token res(index, idx, tt, acc);
     index = idx;
     return res;
+}
+
+Token Lexer::lexInt()
+{
+    int idx = index;
+    std::string acc;
+    while (idx < input.length())
+    {
+        char c = input[idx];
+        if (digits.find(c) == std::string::npos)
+            break;
+        idx++;
+        acc.push_back(c);
+    }
+    Token t(index, idx, TokenType::INTVAL, acc);
+    index = idx;
+    return t;
+}
+
+bool Lexer::lexHex(Token& res)
+{
+    int idx = index;
+    std::string acc;
+    bool hasPrefix = false;
+    bool hasX = false;
+    int xCount = 0;
+    std::string allowed = "0123456789abcdefABCDEFxX";
+    while (idx < input.length())
+    {
+        char c = input[idx];
+
+        if (allowed.find(c) == std::string::npos)
+            break;
+
+        if (c == 'x')
+        {
+            if (xCount >= 1) break;
+            if (acc.length() == 1) hasPrefix = true;
+            xCount++;
+        }
+
+        idx++;
+        acc.push_back(c);
+    }
+
+    if (hasPrefix && acc.length() > 2)
+    {
+        Token t(index, idx, TokenType::INTVAL, acc);
+        res = t;
+        index = idx;
+        return true;
+    } else return false;
 }
 
 char Lexer::ahead()
