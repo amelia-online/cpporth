@@ -84,7 +84,7 @@ Expr *Parser::parseExpr()
         index++;
     }
     subexps.pop_back();
-    return new Expr(subexps);
+    return new AtomExpr(subexps);
 }
 
 ConstCmd *Parser::parseConst()
@@ -97,6 +97,24 @@ ConstCmd *Parser::parseConst()
     index--;
     check(pop(), TokenType::END);
     return new ConstCmd(ident, expr);
+}
+
+ProcCmd *Parser::parseProc()
+{
+
+}
+
+MemoryCmd *Parser::parseMemory()
+{
+    index++;
+    Token t = peek();
+    check(t, TokenType::VAR);
+    std::string ident = t.content;
+    index++;
+    Expr *e = parseExpr();
+    index--;
+    check(pop(), TokenType::END);
+    return new MemoryCmd(ident, e);
 }
 
 std::vector<AST*> Parser::parse()
@@ -119,6 +137,16 @@ std::vector<AST*> Parser::parse()
 
             case TokenType::CONST:
                 asts.push_back(parseConst());
+                break;
+            
+            case TokenType::MEMORY:
+                asts.push_back(parseMemory());
+                break;
+
+            case TokenType::INLINE:
+                index++;
+            case TokenType::PROC:
+                asts.push_back(parseProc());
                 break;
 
             default:

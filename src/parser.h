@@ -19,7 +19,8 @@ public:
     AST parseWhile();
     AST parseIf();
     ConstCmd *parseConst();
-    AST parseProc();
+    MemoryCmd *parseMemory();
+    ProcCmd *parseProc();
     AST parseInclude();
     Expr *parseExpr();
 };

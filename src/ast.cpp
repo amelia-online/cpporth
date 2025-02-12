@@ -18,15 +18,41 @@ std::string Subexpr::toString()
     }
 }
 
-Expr::Expr(std::vector<Subexpr> subexprs) : subexprs(subexprs) {;}
-Expr::~Expr() {;}
+AtomExpr::AtomExpr(std::vector<Subexpr> subexprs) : subexprs(subexprs) {;}
+AtomExpr::~AtomExpr() {;}
 
-std::string Expr::toString()
+AST::~AST() {}
+Cmd::~Cmd() {}
+Stmt::~Stmt() {}
+Expr::~Expr() {}
+
+std::string AtomExpr::toString()
 {
     std::string acc;
+    int i = 0;
     for (Subexpr& e : subexprs)
-        acc += e.toString() + " ";
+    {
+        acc += e.toString() + ((i < subexprs.size() - 1) ? " " : "");
+        i++;
+    }
     return "(" + acc + ")";
+}
+
+ProcCmd::ProcCmd(std::string name, std::vector<AST*> body) : name(name), body(body) {;}
+ProcCmd::~ProcCmd()
+{
+    for (AST *ast : body)
+        delete ast;
+}
+std::string ProcCmd::toString()
+{
+    std::string acc;
+    for (int i = 0; i < body.size(); i++)
+        if (i < body.size() - 1)
+            acc += body[i]->toString() + " ";
+        else
+            acc += body[i]->toString();
+    return "(ProcCmd " + name + " " + acc + ")";
 }
 
 ConstCmd::ConstCmd(std::string ident, Expr *exp) : ident(ident), expression(exp) {;}
@@ -39,4 +65,15 @@ ConstCmd::~ConstCmd()
 std::string ConstCmd::toString()
 {
     return "(ConstCmd " + ident + " " + expression->toString() + ")";
+}
+
+MemoryCmd::MemoryCmd(std::string ident, Expr *expr) : ident(ident), sizeExpr(expr) {;}
+MemoryCmd::~MemoryCmd()
+{
+    delete sizeExpr;
+}
+
+std::string MemoryCmd::toString()
+{
+    return "(MemoryCmd " + ident + " " + sizeExpr->toString() + ")";
 }

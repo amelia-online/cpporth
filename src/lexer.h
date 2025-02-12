@@ -39,7 +39,7 @@ enum class TokenType
     OFFSET,
     RESET,
     BOOL,
-    ADDR,
+    ADDR, // 32
     BIKESHEDDER,
     ASSERT,
     IFSTAR,
@@ -47,7 +47,7 @@ enum class TokenType
     END_OF_FILE,
     SYSCALLN,
     CHAR,
-    TRUE,
+    TRUE, // 40
     FALSE,
     ADDROF
 };

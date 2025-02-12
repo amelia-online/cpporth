@@ -13,6 +13,14 @@ enum class SubexprType
 class AST 
 { 
 public:
+    virtual ~AST() = 0;
+    virtual std::string toString() = 0;
+};
+
+class Expr : public AST 
+{
+public:
+    virtual ~Expr() = 0;
     virtual std::string toString() = 0;
 };
 
@@ -29,21 +37,37 @@ public:
     std::string toString();
 };
 
-class Expr : public AST 
+class AtomExpr : public Expr 
 {
     std::vector<Subexpr> subexprs;
 public:
-    ~Expr();
-    Expr(std::vector<Subexpr>);
-    virtual std::string toString();
+    ~AtomExpr() override;
+    AtomExpr(std::vector<Subexpr>);
+    std::string toString() override;
 };
 
 class Cmd : public AST
 {
+public:
+    virtual ~Cmd() = 0;
+    //virtual std::string toString() = 0;
 };
 
 class Stmt : public AST 
 {
+public:
+    virtual ~Stmt() = 0;
+    //virtual std::string toString() = 0;
+};
+
+class ProcCmd : public Cmd
+{
+    std::string name;
+    std::vector<AST*> body;
+public:
+    ProcCmd(std::string, std::vector<AST*>);
+    ~ProcCmd() override;
+    std::string toString() override;
 };
 
 class ConstCmd : public Cmd
@@ -51,9 +75,19 @@ class ConstCmd : public Cmd
     std::string ident;
     Expr *expression;
 public:
-    ~ConstCmd();
+    ~ConstCmd() override;
     ConstCmd(std::string, Expr *);
-    virtual std::string toString();
+    std::string toString() override;
+};
+
+class MemoryCmd : public Cmd
+{
+  std::string ident;
+  Expr *sizeExpr;
+public:
+    MemoryCmd(std::string, Expr *);
+    ~MemoryCmd() override;
+    std::string toString() override;
 };
 
 
