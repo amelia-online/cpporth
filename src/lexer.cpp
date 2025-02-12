@@ -197,7 +197,7 @@ bool Lexer::lexOperator(Token& res)
 {
     int idx = index;
     std::string acc;
-    std::string allowed = "0123456789=<>/" + operators;
+    std::string allowed = "0123456789=<>/@" + operators;
     std::vector<std::string> recognized = {"<", ">", "=", "!=", ">=", "<=",
         "+", "-", "*", "--", "!8", "@8", "!16", "@16", "!32", "@32", "!64", "@64"};
 
@@ -232,7 +232,7 @@ Token Lexer::lexKeyword()
 {
     int idx = index;
     std::string acc;
-    std::string allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-*()+.@!?+_/";
+    std::string allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-*()+.@!?+_/%";
 
     while (idx < input.length())
     {
@@ -300,14 +300,19 @@ Token Lexer::lexKeyword()
         tt = TokenType::PTR;
     else if (acc == "else")
         tt = TokenType::ELSE;
+    else if (acc == "addr")
+        tt = TokenType::ADDR;
+    else if (acc == "addr-of")
+        tt = TokenType::ADDROF;
     else if (acc == "max")
         tt = TokenType::MAX;
     else if (acc == "min")
         tt = TokenType::MIN;
     else if (acc == "cast(int)" || acc == "cast(bool)" || acc == "cast(ptr)" 
-        || acc == "and" || acc == "or" || acc == "not" || acc == "shr" || acc == "shl")
+        || acc == "and" || acc == "or" || acc == "not" || acc == "shr" || acc == "shl" 
+        || "idivmod" || "call-like")
         tt = TokenType::OP;
-    else if (acc == "syscall1" || acc == "syscall2" || acc == "syscall3" || acc == "syscall4" 
+    else if (acc == "syscall0" || acc == "syscall1" || acc == "syscall2" || acc == "syscall3" || acc == "syscall4" 
         || acc == "syscall5" || acc == "syscall6")
         tt = TokenType::SYSCALLN;
     else
