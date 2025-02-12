@@ -67,7 +67,7 @@ class Lexer
    size_t index;
    const std::string alphabet = "abcdefghjiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
    const std::string digits = "0123456789";
-   const std::string operators = "+-*!@";
+   const std::string operators = "+-*!@=?><_";
 public:
     Lexer(std::string);
     std::vector<Token> lex();
@@ -81,7 +81,8 @@ public:
     Token lexString();
     Token lexChar();
     bool isComment();
-    Token lexOperator();
+    bool lexOperator(Token&);
+    void debug();
 };
 
 #endif //LEXER_H

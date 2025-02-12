@@ -6,6 +6,12 @@ Token::Token(int start, int end, TokenType type, std::string content) : start(st
 
 Token::Token() : start(-1), end(-1), type(TokenType::VAR), content("") {;}
 
+void Lexer::debug()
+{
+    if (index > 1 && index + 1 < input.length())
+        std::cout << input[index-1] << input[index] << input[index+1] << std::endl;
+}
+
 std::string Token::toString()
 {
     if (type == TokenType::NEWLINE)
@@ -22,6 +28,10 @@ std::vector<Token> Lexer::lex()
     while (index < input.length())
     {
         char ch = peek();
+
+        //debug();
+        //for (Token t : tokens)
+        //    std::cout << t.toString() << std::endl;
 
         if (ch == '\n')
         {
@@ -40,11 +50,20 @@ std::vector<Token> Lexer::lex()
             continue;
         }
 
-        if (alphabet.find(ch) != std::string::npos)    
-            tokens.push_back(lexKeyword());
+        if (ch == '/')
+            if (isComment())
+                continue;
 
-        else if (operators.find(ch) != std::string::npos)
-            tokens.push_back(lexOperator());
+        if (operators.find(ch) != std::string::npos)
+        {
+            Token t;
+            if (lexOperator(t))
+                tokens.push_back(t);
+            else tokens.push_back(lexKeyword());
+        }
+
+        else if (alphabet.find(ch) != std::string::npos)    
+            tokens.push_back(lexKeyword());
         
         else if (ch == '"')
             tokens.push_back(lexString());
@@ -68,6 +87,17 @@ std::vector<Token> Lexer::lex()
     }
     tokens.push_back(Token(index, index, TokenType::END_OF_FILE, "EOF"));
     return tokens;
+}
+
+bool Lexer::isComment()
+{
+    if (peek() == '/' && input[index + 1] == '/')
+    {
+        index += 2;
+        while (peek() != '\n' && index < input.length())
+            index++;
+        return true;
+    } else return false;
 }
 
 Token Lexer::lexString()
@@ -121,14 +151,53 @@ Token Lexer::lexString()
 
 Token Lexer::lexChar()
 {
+    int idx = index;
+    int i = 0;
+    std::string acc;
+    int qCount = 0;
+    bool escape = false;
+    while (i < 4)
+    {
+        char c = input[idx];
 
+        if (escape)
+        {
+            acc.push_back(c);
+            i++;
+            idx++;
+            escape = false;
+            continue;
+        }
+
+        if (c == '\\')
+            escape = true;
+
+        if (c == '\'')
+        {
+            ++qCount;
+            if (qCount >= 2)
+            {
+                acc.push_back(c);
+                i++;
+                idx++;
+                break;
+            }
+        }
+
+        idx++;
+        i++;
+        acc.push_back(c);
+    }
+    Token t(index, idx, TokenType::CHAR, acc);
+    index = idx;
+    return t;
 }
 
-Token Lexer::lexOperator()
+bool Lexer::lexOperator(Token& res)
 {
     int idx = index;
     std::string acc;
-    std::string allowed = "0123456789=<>" + operators;
+    std::string allowed = "0123456789=<>/" + operators;
     std::vector<std::string> recognized = {"<", ">", "=", "!=", ">=", "<=",
         "+", "-", "*", "--", "!8", "@8", "!16", "@16", "!32", "@32", "!64", "@64"};
 
@@ -145,8 +214,8 @@ Token Lexer::lexOperator()
 
     if (std::find(recognized.begin(), recognized.end(), acc) == recognized.end())
     {
-        std::cout << "Lex error: unrecognized operator: " << acc << std::endl;
-        throw new std::exception();
+        //std::cout << "Lex error: unrecognized operator: " << acc << std::endl;
+        return false;
     } 
     else if (acc == "--")
         tt = TokenType::BIKESHEDDER;
@@ -155,14 +224,15 @@ Token Lexer::lexOperator()
 
     Token t(index, idx, tt, acc);
     index = idx;
-    return t;
+    res = t;
+    return true;
 }
 
 Token Lexer::lexKeyword()
 {
     int idx = index;
     std::string acc;
-    std::string allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-*()+.";
+    std::string allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-*()+.@!?+_/";
 
     while (idx < input.length())
     {
@@ -309,7 +379,7 @@ char Lexer::offset(size_t offs)
 {
     if (index + offs < input.length() && index + offs > -1)
         return input[index + offs];
-    throw new std::exception();
+    else throw new std::exception();
 }
 
 char Lexer::pop()
