@@ -15,7 +15,7 @@ enum class TokenType
     END,
     IF,
     PRINT,
-    INTVAL,
+    INTVAL, // 8
     INCLUDE,
     STRING,
     CSTRING,
@@ -23,7 +23,7 @@ enum class TokenType
     SWAP,
     DUP,
     ROT,
-    OVER,
+    OVER, // 16
     OP,
     MAX,
     MIN,
@@ -31,7 +31,7 @@ enum class TokenType
     ELSE,
     DO,
     INT,
-    INLINE,
+    INLINE, // 24
     PTR,
     CONST,
     LET,
@@ -47,6 +47,8 @@ enum class TokenType
     END_OF_FILE,
     SYSCALLN,
     CHAR,
+    TRUE,
+    FALSE,
     ADDROF
 };
 

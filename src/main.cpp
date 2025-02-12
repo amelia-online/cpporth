@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include "lexer.h"
+#include "parser.h"
 
 int main(int argc, char **argv)
 {
@@ -20,8 +21,14 @@ int main(int argc, char **argv)
         getline(file, content, '\0');
         Lexer lexer(content);
         std::vector<Token> tokens = lexer.lex();
-        for (Token t : tokens)
-            std::cout << t.toString() << std::endl;
+        Parser parser(tokens);
+        std::vector<AST*> asts = parser.parse();
+        for (AST *ast : asts)
+            std::cout << ast->toString() << std::endl;
+        parser.cleanup(asts);
+        //for (Token t : tokens)
+        //    std::cout << t.toString() << std::endl;
+
     } else std::cout << "Could not open file" << std::endl;
 
 }

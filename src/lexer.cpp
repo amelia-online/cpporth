@@ -304,19 +304,27 @@ Token Lexer::lexKeyword()
         tt = TokenType::ADDR;
     else if (acc == "addr-of")
         tt = TokenType::ADDROF;
+    else if (acc == "true")
+        tt = TokenType::TRUE;
+    else if (acc == "false")
+        tt = TokenType::FALSE;
     else if (acc == "max")
         tt = TokenType::MAX;
     else if (acc == "min")
         tt = TokenType::MIN;
     else if (acc == "cast(int)" || acc == "cast(bool)" || acc == "cast(ptr)" 
         || acc == "and" || acc == "or" || acc == "not" || acc == "shr" || acc == "shl" 
-        || "idivmod" || "call-like")
+        || acc == "idivmod" || acc == "call-like")
+    {
         tt = TokenType::OP;
+    }
     else if (acc == "syscall0" || acc == "syscall1" || acc == "syscall2" || acc == "syscall3" || acc == "syscall4" 
         || acc == "syscall5" || acc == "syscall6")
         tt = TokenType::SYSCALLN;
     else
         tt = TokenType::VAR;
+
+    //std::cout << "Lexed " << acc << " as " << std::to_string((int)tt) << std::endl;
 
     Token res(index, idx, tt, acc);
     index = idx;
