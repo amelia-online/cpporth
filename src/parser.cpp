@@ -71,7 +71,14 @@ Type Parser::parseType()
 
 WhileExpr *Parser::parseWhile()
 {
-
+    index++;
+    std::vector<Expr *> cond = parseExpr();
+    //index--;
+    check(pop(), TokenType::DO);
+    std::vector<Expr *> body = parseExpr();
+    //index--;
+    check(pop(), TokenType::END);
+    return new WhileExpr(cond, body);
 }
 
 std::vector<Expr *> Parser::parseExpr()
@@ -84,12 +91,16 @@ std::vector<Expr *> Parser::parseExpr()
         TokenType::DROP, TokenType::SWAP, TokenType::OVER,
         TokenType::DUP, TokenType::ROT, TokenType::HERE,
         TokenType::MAX, TokenType::MIN, TokenType::PRINT,
-        TokenType::SYSCALLN, TokenType::NEWLINE
+        TokenType::SYSCALLN, TokenType::NEWLINE, TokenType::WHILE
     };
 
     while (std::find(allowed.begin(), allowed.end(), t.type) != allowed.end())
     {
         t = peek();
+
+        if (std::find(allowed.begin(), allowed.end(), t.type) == allowed.end())
+            break;
+
         //std::cout << "Parsing: " << t.toString() << std::endl;
         switch (t.type)
         {
@@ -110,17 +121,16 @@ std::vector<Expr *> Parser::parseExpr()
             case TokenType::IF:
                 //todo
                 break;
-            case TokenType::OP:
+            //case TokenType::OP:
                 // todo
-                break;
+            //    break;
             default:
                 subexps.push_back(new VarExpr(t.content));   
         }
 
         index++;
     }
-    if (subexps.size() > 0)
-        subexps.pop_back();
+   
     return subexps;
 }
 
@@ -131,7 +141,7 @@ ConstCmd *Parser::parseConst()
     check(identToken, TokenType::VAR);
     std::string ident = identToken.content;
     std::vector<Expr *> expr = parseExpr();
-    index--;
+    //index--;
     check(pop(), TokenType::END);
     return new ConstCmd(ident, expr);
 }
@@ -163,6 +173,7 @@ ProcCmd *Parser::parseProc()
     std::string ident = pop().content;
     FnSignature sig = parseSignature();
     std::vector<Expr*> body = parseExpr();
+    check(pop(), TokenType::END);
     return new ProcCmd(ident, sig, body);
 }
 
@@ -174,7 +185,7 @@ MemoryCmd *Parser::parseMemory()
     std::string ident = t.content;
     index++;
     std::vector<Expr *> e = parseExpr();
-    index--;
+    //index--;
     check(pop(), TokenType::END);
     return new MemoryCmd(ident, e);
 }
@@ -209,6 +220,9 @@ std::vector<AST*> Parser::parse()
                 index++;
             case TokenType::PROC:
                 asts.push_back(parseProc());
+                break;
+
+            case TokenType::INCLUDE:
                 break;
 
             default:
