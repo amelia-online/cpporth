@@ -50,41 +50,78 @@ Token Parser::behind()
     }
 }
 
-Expr *Parser::parseExpr()
+Type Parser::parseType()
 {
-    std::vector<Subexpr> subexps;
+    Token t = pop();
+    switch (t.type)
+    {
+        case TokenType::INT:
+            return Type(TypeKind::INT);
+        case TokenType::BOOL:
+            return Type(TypeKind::BOOL);
+        case TokenType::PTR:
+            return Type(TypeKind::PTR);
+        case TokenType::ADDR:
+            return Type(TypeKind::ADDR);
+        default:
+            std::cout << "Error: not a type: " << t.toString() << std::endl;
+            throw new std::exception();
+    }
+}
+
+WhileExpr *Parser::parseWhile()
+{
+
+}
+
+std::vector<Expr *> Parser::parseExpr()
+{
+    std::vector<Expr *> subexps;
     Token t = peek();
-    std::vector<TokenType> allowed = {TokenType::INTVAL,  TokenType::TRUE, 
+    std::vector<TokenType> allowed = { TokenType::INTVAL,  TokenType::TRUE, 
         TokenType::FALSE, TokenType::VAR,  TokenType::OP,
         TokenType::CHAR,  TokenType::STRING,TokenType::CSTRING,
         TokenType::DROP, TokenType::SWAP, TokenType::OVER,
         TokenType::DUP, TokenType::ROT, TokenType::HERE,
         TokenType::MAX, TokenType::MIN, TokenType::PRINT,
-        TokenType::SYSCALLN};
+        TokenType::SYSCALLN, TokenType::NEWLINE
+    };
 
     while (std::find(allowed.begin(), allowed.end(), t.type) != allowed.end())
     {
         t = peek();
-        
+        //std::cout << "Parsing: " << t.toString() << std::endl;
         switch (t.type)
         {
+            case TokenType::NEWLINE:
+                break;
             case TokenType::INTVAL:
-                subexps.push_back(Subexpr(std::stoi(t.content)));
+                subexps.push_back(new IntExpr((long)std::stoi(t.content)));
                 break;
             case TokenType::TRUE:
-                subexps.push_back(Subexpr(true));
+                subexps.push_back(new TrueExpr());
                 break;
             case TokenType::FALSE:
-                subexps.push_back(Subexpr(false));
+                subexps.push_back(new FalseExpr());
+                break;
+            case TokenType::WHILE:
+                subexps.push_back(parseWhile());
+                break;
+            case TokenType::IF:
+                //todo
+                break;
+            case TokenType::OP:
+                // todo
                 break;
             default:
-                subexps.push_back(Subexpr(t.content));   
+                subexps.push_back(new VarExpr(t.content));   
         }
 
         index++;
     }
-    subexps.pop_back();
-    return new AtomExpr(subexps);
+    if (subexps.size() > 0)
+        subexps.pop_back();
+    return subexps;
 }
 
 ConstCmd *Parser::parseConst()
@@ -93,15 +130,40 @@ ConstCmd *Parser::parseConst()
     Token identToken = pop();
     check(identToken, TokenType::VAR);
     std::string ident = identToken.content;
-    Expr *expr = parseExpr();
+    std::vector<Expr *> expr = parseExpr();
     index--;
     check(pop(), TokenType::END);
     return new ConstCmd(ident, expr);
 }
+FnSignature Parser::parseSignature()
+{
+    std::vector<Type> ins;
+    std::vector<Type> outs;
+    Token t = peek();
+    bool in = true;
+    while (t.type != TokenType::IN)
+    {
+        t = peek();
+        if (t.type == TokenType::IN) break;
+        else if (t.type == TokenType::BIKESHEDDER) { in = false; index++; }
+
+        Type type = parseType();
+
+        if (in) ins.push_back(type);
+        else outs.push_back(type);
+    }
+    index++;
+    return FnSignature(ins, outs);
+}
 
 ProcCmd *Parser::parseProc()
 {
-
+    index++;
+    check(peek(), TokenType::VAR);
+    std::string ident = pop().content;
+    FnSignature sig = parseSignature();
+    std::vector<Expr*> body = parseExpr();
+    return new ProcCmd(ident, sig, body);
 }
 
 MemoryCmd *Parser::parseMemory()
@@ -111,7 +173,7 @@ MemoryCmd *Parser::parseMemory()
     check(t, TokenType::VAR);
     std::string ident = t.content;
     index++;
-    Expr *e = parseExpr();
+    std::vector<Expr *> e = parseExpr();
     index--;
     check(pop(), TokenType::END);
     return new MemoryCmd(ident, e);

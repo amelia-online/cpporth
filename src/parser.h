@@ -16,13 +16,15 @@ public:
     Token pop();
     Token ahead();
     Token behind();
-    AST parseWhile();
-    AST parseIf();
+    WhileExpr *parseWhile();
+    IfExpr *parseIf();
     ConstCmd *parseConst();
     MemoryCmd *parseMemory();
     ProcCmd *parseProc();
     AST parseInclude();
-    Expr *parseExpr();
+    std::vector<Expr *> parseExpr();
+    Type parseType();
+    FnSignature parseSignature();
 };
 
 #endif // PARSER_H
