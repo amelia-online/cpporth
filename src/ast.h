@@ -28,7 +28,8 @@ enum class ASTKind
     STRINGLITEXPR,
     LETSTMT,
     PEEKSTMT,
-    PRINTEXPR
+    PRINTEXPR,
+    MEMORYEXPR
 };
 
 class AST 
@@ -117,6 +118,19 @@ public:
     IfExpr *next;
     IfExpr(std::vector<Expr*>, std::vector<Expr*>, IfExpr *);
     ~IfExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class MemoryExpr : public Expr
+{
+    std::string ident;
+    std::vector<Expr*> body;
+public:
+    MemoryExpr(std::string, std::vector<Expr*>);
+    MemoryExpr(MemoryExpr *);
+    ~MemoryExpr();
+    std::string getIdent();
     std::string toString() override;
     ASTKind getASTKind() override;
 };
@@ -237,6 +251,7 @@ public:
     ~MemoryCmd() override;
     std::string toString() override;
     ASTKind getASTKind() override;
+    MemoryExpr *toMemoryExpr();
 };
 
 

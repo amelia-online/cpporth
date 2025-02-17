@@ -23,8 +23,8 @@ int main(int argc, char **argv)
         Lexer lexer(content);
         std::vector<Token> tokens = lexer.lex();
 
-        for (auto t : tokens)
-            std::cout << t.toString() << std::endl;
+        //for (auto t : tokens)
+        //    std::cout << t.toString() << std::endl;
 
         Parser parser(tokens);
         std::vector<AST*> asts = parser.parse();

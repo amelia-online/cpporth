@@ -47,9 +47,7 @@ enum class TokenType
     END_OF_FILE,
     SYSCALLN,
     CHAR,
-    TRUE, // 40
-    FALSE,
-    ADDROF
+    ADDROF // 40
 };
 
 class Token
@@ -70,7 +68,7 @@ class Lexer
    std::string input;
    size_t index;
    int line;
-   const std::string alphabet = "abcdefghjiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ/%+";
+   const std::string alphabet = "abcdefghjiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ/%+=1234567890-";
    const std::string digits = "0123456789";
    const std::string operators = "+-*!@=?><_";
 public:

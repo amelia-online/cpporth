@@ -62,9 +62,6 @@ std::vector<Token> Lexer::lex()
                 tokens.push_back(t);
             else tokens.push_back(lexKeyword());
         }
-
-        else if (alphabet.find(ch) != std::string::npos)    
-            tokens.push_back(lexKeyword());
         
         else if (ch == '"')
             tokens.push_back(lexString());
@@ -84,6 +81,9 @@ std::vector<Token> Lexer::lex()
             else
                 tokens.push_back(lexInt());
         }
+
+        else if (alphabet.find(ch) != std::string::npos)    
+            tokens.push_back(lexKeyword());
 
     }
     tokens.push_back(Token(index, index, line, TokenType::END_OF_FILE, "EOF"));
@@ -233,7 +233,7 @@ Token Lexer::lexKeyword()
 {
     int idx = index;
     std::string acc;
-    std::string allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-*().@!?+_/%1234567890";
+    std::string allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-*().@!?+_/%1234567890=<>";
 
     while (idx < input.length())
     {
@@ -305,10 +305,6 @@ Token Lexer::lexKeyword()
         tt = TokenType::ADDR;
     else if (acc == "addr-of")
         tt = TokenType::ADDROF;
-    else if (acc == "true")
-        tt = TokenType::TRUE;
-    else if (acc == "false")
-        tt = TokenType::FALSE;
     else if (acc == "max")
         tt = TokenType::MAX;
     else if (acc == "min")
@@ -336,14 +332,24 @@ Token Lexer::lexInt()
 {
     int idx = index;
     std::string acc;
+    std::string allowed = digits + alphabet;
     while (idx < input.length())
     {
         char c = input[idx];
-        if (digits.find(c) == std::string::npos)
+        if (allowed.find(c) == std::string::npos)
             break;
         idx++;
         acc.push_back(c);
     }
+
+    for (char c : acc)
+        if (digits.find(c) == std::string::npos)
+        {
+            Token t(index, idx, line, TokenType::VAR, acc);
+            index = idx;
+            return t;
+        }
+
     Token t(index, idx, line, TokenType::INTVAL, acc);
     index = idx;
     return t;

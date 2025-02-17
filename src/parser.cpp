@@ -173,8 +173,8 @@ std::vector<Expr *> Parser::parseExpr()
 {
     std::vector<Expr *> subexps;
     Token t = peek();
-    std::vector<TokenType> allowed = { TokenType::INTVAL,  TokenType::TRUE, 
-        TokenType::FALSE, TokenType::VAR,  TokenType::OP,
+    std::vector<TokenType> allowed = { TokenType::INTVAL,
+        TokenType::VAR,  TokenType::OP,
         TokenType::CHAR,  TokenType::STRING,TokenType::CSTRING,
         TokenType::DROP, TokenType::SWAP, TokenType::OVER,
         TokenType::DUP, TokenType::ROT, TokenType::HERE,
@@ -197,17 +197,20 @@ std::vector<Expr *> Parser::parseExpr()
             case TokenType::NEWLINE:
                 break;
             case TokenType::INTVAL:
-                subexps.push_back(new IntExpr((long)std::stoi(t.content)));
+            {
+                subexps.push_back(new IntExpr((long)std::stol(t.content)));
                 break;
-            case TokenType::TRUE:
-                subexps.push_back(new TrueExpr());
-                break;
-            case TokenType::FALSE:
-                subexps.push_back(new FalseExpr());
-                break;
+            }
             case TokenType::PRINT:
                 subexps.push_back(new PrintExpr());
                 break;
+            case TokenType::MEMORY:
+            {
+                MemoryCmd *m = parseMemory();
+                MemoryExpr *res = m->toMemoryExpr();
+                subexps.push_back(res);
+                break;
+            }
             case TokenType::CSTRING:
                 // todo
             case TokenType::STRING:

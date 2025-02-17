@@ -16,6 +16,47 @@ std::string Type::toString()
     }
 }
 
+MemoryExpr::MemoryExpr(std::string name, std::vector<Expr*> body) : ident(name), body(body) {;}
+
+MemoryExpr::MemoryExpr(MemoryExpr *other)
+{
+    ident = std::string(other->ident);
+    body = std::vector<Expr*>(other->body);
+}
+
+MemoryExpr::~MemoryExpr()
+{
+    for (auto e : body)
+        delete e;
+}
+
+std::string MemoryExpr::getIdent()
+{
+    return ident;
+}
+
+std::string MemoryExpr::toString()
+{
+    if (body.size() == 0)
+        return "(MemoryExpr " + ident + ")";
+
+    std::string acc = "(";
+    int idx = 0;
+    for (auto e : body)
+    {
+        acc += e->toString() + (idx < body.size()-1 ? " " : ")");
+        idx++;
+    }
+
+
+    return "(MemoryExpr " + ident + " " + acc + ")";
+}   
+
+ASTKind MemoryExpr::getASTKind()
+{
+    return ASTKind::MEMORYEXPR;
+}
+
 PrintExpr::~PrintExpr() {}
 std::string PrintExpr::toString()
 {
@@ -380,4 +421,9 @@ std::string MemoryCmd::toString()
     acc += ")";
 
     return "(MemoryCmd " + ident + " " + acc + ")";
+}
+
+MemoryExpr *MemoryCmd::toMemoryExpr()
+{
+    return new MemoryExpr(ident, body);
 }
