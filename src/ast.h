@@ -3,13 +3,6 @@
 
 #include <string>
 
-enum class SubexprType
-{
-    OPERATOR,
-    INTEGER,
-    BOOLEAN,
-};
-
 enum class TypeKind
 {
     INT,
@@ -18,11 +11,30 @@ enum class TypeKind
     ADDR
 };
 
+enum class ASTKind
+{
+    INTEXPR,
+    TRUEEXPR,
+    FALSEEXPR,
+    OPEXPR,
+    VAREXPR,
+    WHILEEXPR,
+    IFEXPR,
+    PROCCMD,
+    CONSTCMD,
+    MEMORYCMD,
+    CHAREXPR,
+    STRINGLITEXPR,
+    LETSTMT,
+    PEEKSTMT,
+};
+
 class AST 
 { 
 public:
     virtual ~AST() = 0;
     virtual std::string toString() = 0;
+    virtual ASTKind getASTKind() = 0;
 };
 
 class Type
@@ -38,19 +50,7 @@ class Expr : public AST
 public:
     virtual ~Expr() = 0;
     virtual std::string toString() = 0;
-};
-
-class Subexpr
-{
-public:
-    Subexpr(int);
-    Subexpr(bool);
-    Subexpr(std::string);
-    int num;
-    bool boolean;
-    std::string op;
-    SubexprType type;
-    std::string toString();
+    virtual ASTKind getASTKind() = 0;
 };
 
 class IntExpr : public Expr
@@ -60,18 +60,21 @@ public:
     IntExpr(long);
     long getValue();
     std::string toString() override;
+    ASTKind getASTKind() override;
 };
 
 class TrueExpr : public Expr
 {
 public:
     std::string toString() override;
+    ASTKind getASTKind() override;
 };
 
 class FalseExpr : public Expr
 {
 public:
     std::string toString() override;
+    ASTKind getASTKind() override;
 };
 
 class CharExpr : public Expr
@@ -81,6 +84,7 @@ public:
     CharExpr(char);
     char getValue();
     std::string toString() override;
+    ASTKind getASTKind() override;
 };
 
 class StringLitExpr : public Expr
@@ -90,6 +94,7 @@ public:
     StringLitExpr(std::string);
     std::string getValue();
     std::string toString() override;
+    ASTKind getASTKind() override;
 };
 
 class VarExpr : public Expr
@@ -99,15 +104,19 @@ public:
     VarExpr(std::string);
     std::string getName();
     std::string toString() override;
+    ASTKind getASTKind() override;
 };
 
 class IfExpr: public Expr
 {
 public:
-   std::vector<std::vector<Expr *> > branches;
-   IfExpr(std::vector<std::vector<Expr*> >);
-   ~IfExpr();
-   std::string toString() override;
+    std::vector<Expr*> then;
+    std::vector<Expr*> elze;
+    IfExpr *next;
+    IfExpr(std::vector<Expr*>, std::vector<Expr*>, IfExpr *);
+    ~IfExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
 };
 
 class WhileExpr : public Expr
@@ -118,8 +127,18 @@ public:
     WhileExpr(std::vector<Expr*>, std::vector<Expr*>);
     ~WhileExpr();
     std::string toString() override;
+    ASTKind getASTKind() override;
 };
 
+class LetExpr : public Expr
+{
+    // TODO
+};  
+
+class PeekExpr : public Expr
+{
+    // TODO
+};
 
 
 class Cmd : public AST
@@ -153,6 +172,7 @@ public:
     ProcCmd(std::string, FnSignature, std::vector<Expr*>);
     ~ProcCmd() override;
     std::string toString() override;
+    ASTKind getASTKind() override;
 };
 
 class ConstCmd : public Cmd
@@ -163,6 +183,7 @@ public:
     ~ConstCmd() override;
     ConstCmd(std::string, std::vector<Expr *>);
     std::string toString() override;
+    ASTKind getASTKind() override;
 };
 
 class MemoryCmd : public Cmd
@@ -173,6 +194,7 @@ public:
     MemoryCmd(std::string, std::vector<Expr *>);
     ~MemoryCmd() override;
     std::string toString() override;
+    ASTKind getASTKind() override;
 };
 
 

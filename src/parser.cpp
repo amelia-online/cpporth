@@ -1,5 +1,11 @@
 #include "parser.h"
 
+void todo()
+{
+    std::cout << "Error: not implemented." << std::endl;
+    throw new std::exception();
+}
+
 void check(Token t, TokenType tt)
 {
     if (t.type != tt)
@@ -81,6 +87,27 @@ WhileExpr *Parser::parseWhile()
     return new WhileExpr(cond, body);
 }
 
+IfExpr *Parser::parseIf()
+{
+    index++;
+    std::vector<Expr*> elze;
+
+    std::vector<Expr*> body = parseExpr();
+
+    if (peek().type == TokenType::END)
+    {
+        index++;
+        return new IfExpr(body, elze, nullptr);
+    } else check(pop(), TokenType::ELSE);
+
+    elze = parseExpr();
+    IfExpr *next = nullptr;
+    if (peek().type == TokenType::IFSTAR)
+        next = parseIf();
+    else check(pop(), TokenType::END);
+    return new IfExpr(body, elze, next);
+}
+
 std::vector<Expr *> Parser::parseExpr()
 {
     std::vector<Expr *> subexps;
@@ -91,7 +118,8 @@ std::vector<Expr *> Parser::parseExpr()
         TokenType::DROP, TokenType::SWAP, TokenType::OVER,
         TokenType::DUP, TokenType::ROT, TokenType::HERE,
         TokenType::MAX, TokenType::MIN, TokenType::PRINT,
-        TokenType::SYSCALLN, TokenType::NEWLINE, TokenType::WHILE
+        TokenType::SYSCALLN, TokenType::NEWLINE, 
+        TokenType::WHILE, TokenType::IF
     };
 
     while (std::find(allowed.begin(), allowed.end(), t.type) != allowed.end())
@@ -119,7 +147,7 @@ std::vector<Expr *> Parser::parseExpr()
                 subexps.push_back(parseWhile());
                 break;
             case TokenType::IF:
-                //todo
+                subexps.push_back(parseIf());
                 break;
             //case TokenType::OP:
                 // todo

@@ -1,0 +1,6 @@
+.vscode
+*.o
+*.txt
+cpporth
+src/test.txt
+*.porth

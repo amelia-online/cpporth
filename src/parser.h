@@ -21,6 +21,8 @@ public:
     ConstCmd *parseConst();
     MemoryCmd *parseMemory();
     ProcCmd *parseProc();
+    LetExpr *parseLet();
+    PeekExpr *parsePeek();
     AST parseInclude();
     std::vector<Expr *> parseExpr();
     Type parseType();

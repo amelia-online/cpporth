@@ -3,6 +3,11 @@
 #include "lexer.h"
 #include "parser.h"
 
+void lex(std::string);
+void parse(std::string);
+void typecheck(std::string);
+void interpret(std::string);
+
 int main(int argc, char **argv)
 {
     if (argc < 2)
@@ -26,9 +31,6 @@ int main(int argc, char **argv)
         for (AST *ast : asts)
             std::cout << ast->toString() << std::endl;
         parser.cleanup(asts);
-        //for (Token t : tokens)
-        //    std::cout << t.toString() << std::endl;
-
     } else std::cout << "Could not open file" << std::endl;
 
 }

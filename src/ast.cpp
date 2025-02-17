@@ -1,9 +1,5 @@
 #include "ast.h"
 
-Subexpr::Subexpr(int number) : num(number), boolean(false), op(""), type(SubexprType::INTEGER) {;}
-Subexpr::Subexpr(bool val) : num(-1), boolean(val), op(""), type(SubexprType::BOOLEAN) {;}
-Subexpr::Subexpr(std::string s) : num(-1), boolean(false), op(s), type(SubexprType::OPERATOR) {;}
-
 Type::Type(TypeKind kind) : kind(kind) {;}
 std::string Type::toString()
 {
@@ -20,24 +16,15 @@ std::string Type::toString()
     }
 }
 
-
-std::string Subexpr::toString()
-{
-    switch (type)
-    {
-        case SubexprType::BOOLEAN:
-            return std::to_string(boolean);
-        case SubexprType::INTEGER:
-            return std::to_string(num);
-        case SubexprType::OPERATOR:
-            return op;
-    }
-}
-
 IntExpr::IntExpr(long val) : value(val) {;}
 std::string IntExpr::toString()
 {
     return "(IntExpr " + std::to_string(value) + ")";
+}
+
+ASTKind IntExpr::getASTKind()
+{
+    return ASTKind::INTEXPR;
 }
 
 std::string TrueExpr::toString()
@@ -45,9 +32,21 @@ std::string TrueExpr::toString()
     return "(TrueExpr true)";
 }
 
+
+ASTKind TrueExpr::getASTKind()
+{
+    return ASTKind::TRUEEXPR;
+}
+
 std::string FalseExpr::toString()
 {
     return "(FalseExpr false)";
+}
+
+
+ASTKind FalseExpr::getASTKind()
+{
+    return ASTKind::FALSEEXPR;
 }
 
 CharExpr::CharExpr(char c) : ch(c) {;}
@@ -57,10 +56,22 @@ std::string CharExpr::toString()
 }
 
 
+ASTKind CharExpr::getASTKind()
+{
+    return ASTKind::CHAREXPR;
+}
+
+
 StringLitExpr::StringLitExpr(std::string val) : value(val) {;}
 std::string StringLitExpr::toString()
 {
     return "(StringLitExpr " + value + ")";
+}
+
+
+ASTKind StringLitExpr::getASTKind()
+{
+    return ASTKind::STRINGLITEXPR;
 }
 
 VarExpr::VarExpr(std::string name) : name(name) {;}
@@ -69,33 +80,52 @@ std::string VarExpr::toString()
     return "(VarExpr " + name + ")";
 }
 
-IfExpr::IfExpr(std::vector<std::vector<Expr*> > branches) : branches(branches) {;}
+
+ASTKind VarExpr::getASTKind()
+{
+    return ASTKind::VAREXPR;
+}
+
+IfExpr::IfExpr(std::vector<Expr *> then, std::vector<Expr*> elze, IfExpr *next) : then(then), elze(elze), next(next) {;}
 IfExpr::~IfExpr()
 {
-    for (auto& branch : branches)
-        for (Expr *e : branch)
-            delete e;
+    for (auto e : then)
+        delete e;
+    for (auto e : elze)
+        delete e;
+    if (next)
+        delete next;
 
+}
+
+
+ASTKind IfExpr::getASTKind()
+{
+    return ASTKind::IFEXPR;
 }
 
 std::string IfExpr::toString()
 {
-    std::string acc;
-    int b = 0;
-    for (auto& branch : branches)
+    std::string accThen = "(";
+    int idx = 0;
+    for (auto e : then) 
     {
-        int i = 0;
-        std::string br = "(";
-        for (Expr*& e : branch)
-        {
-            br += e->toString() + (i < branch.size()-1 ? " " : "");
-            i++;
-        }
-        br += ")";
-        acc += br + (b < branches.size() ? " " : "");
-        b++;
+        accThen += e->toString() + (idx < then.size()-1 ? " " : "");
+        idx++;
     }
-    return "(IfExpr " + acc + ")";
+    accThen += ")";
+
+    idx = 0;
+    std::string accElze = "(";
+    for (auto e : elze) 
+    {
+        accElze += e->toString() + (idx < then.size()-1 ? " " : "");
+        idx++;
+    }
+    accElze += ")";
+
+    
+    return "[IfExpr " + accThen + " " + accElze + " " + (next ? next->toString() : "") + "]";
 }
 
 WhileExpr::WhileExpr(std::vector<Expr*> cond, std::vector<Expr*> body) : cond(cond), body(body) {;}
@@ -106,6 +136,13 @@ WhileExpr::~WhileExpr()
     for (Expr *e : body)
         delete e;
 }
+
+
+ASTKind WhileExpr::getASTKind()
+{
+    return ASTKind::WHILEEXPR;
+}
+
 std::string WhileExpr::toString() 
 {
     std::string acc;
@@ -165,6 +202,13 @@ ProcCmd::~ProcCmd()
     for (AST *ast : body)
         delete ast;
 }
+
+
+ASTKind ProcCmd::getASTKind()
+{
+    return ASTKind::PROCCMD;
+}
+
 std::string ProcCmd::toString()
 {
     std::string acc;
@@ -182,6 +226,12 @@ ConstCmd::~ConstCmd()
 {
     for (auto e : body)
         delete e;
+}
+
+
+ASTKind ConstCmd::getASTKind()
+{
+    return ASTKind::CONSTCMD;
 }
 
 std::string ConstCmd::toString()
@@ -203,6 +253,12 @@ MemoryCmd::~MemoryCmd()
 {
     for (auto e : body)
         delete e;
+}
+
+
+ASTKind MemoryCmd::getASTKind()
+{
+    return ASTKind::MEMORYCMD;
 }
 
 std::string MemoryCmd::toString()
