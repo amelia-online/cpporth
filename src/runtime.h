@@ -3,42 +3,52 @@
 
 #include <unordered_map>
 #include "ast.h"
+typedef unsigned char uchar;
 
 class Value
 {
+    Type type;
 public:
-    virtual ~Value() = 0;
-    virtual std::string toString() = 0;
+    // todo
 };
 
-class IntValue : public Value
+class Data
 {
+    Type type;
+    void *ptr;
 public:
-    long value;
-    IntValue(long);
-    ~IntValue();
-
+    Data(void *);
+    Data(long);
+    Data(bool);
+    ~Data();
+    Type getType();
+    bool getBoolVal();
+    long getIntVal();
+    uchar *getPtrVal();
 };
 
 class Env
 {
 public:
-    std::unordered_map<std::string, long> variables;
+    std::unordered_map<std::string, Data> variables;
     std::unordered_map<std::string, ProcCmd*> procs;
 };
 
+
 class Stack
 {
-    std::vector<long> data;
+    std::vector<Data> data;
 public:
     void push(long);
-    long pop();
+    void push(bool);
+    void push(void *);
+    Data pop();
+    Data peek();
     int size();
 };
 
 std::vector<AST*> toASTVec(std::vector<Expr*>);
-void demo(std::vector<AST*>, Stack&, Env&);
-Value *interp(std::vector<AST*>, Stack&, Env&);
+void interp(std::vector<AST*>, Stack&, Env&);
 void typecheck(std::vector<AST*>);
 
 #endif // CPPORTH_RUNTIME_H

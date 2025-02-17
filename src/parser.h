@@ -23,7 +23,7 @@ public:
     ProcCmd *parseProc();
     LetExpr *parseLet();
     PeekExpr *parsePeek();
-    AST parseInclude();
+    IncludeCmd *parseInclude();
     std::vector<Expr *> parseExpr();
     Type parseType();
     FnSignature parseSignature();

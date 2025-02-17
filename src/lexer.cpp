@@ -2,9 +2,9 @@
 #include <format>
 #include <algorithm>
 
-Token::Token(int start, int end, TokenType type, std::string content) : start(start), end(end), type(type), content(content) {;}
+Token::Token(int start, int end, int line, TokenType type, std::string content) : start(start), end(end), line(line), type(type), content(content) {;}
 
-Token::Token() : start(-1), end(-1), type(TokenType::VAR), content("") {;}
+Token::Token() : start(-1), end(-1), line(-1), type(TokenType::VAR), content("") {;}
 
 void Lexer::debug()
 {
@@ -19,7 +19,7 @@ std::string Token::toString()
     return content;
 }
 
-Lexer::Lexer(std::string input) : input(input), index(0) {;}
+Lexer::Lexer(std::string input) : input(input), line(1), index(0) {;}
 
 std::vector<Token> Lexer::lex()
 {
@@ -37,9 +37,10 @@ std::vector<Token> Lexer::lex()
         {
             if (tokens.size() == 0 || tokens.back().type != TokenType::NEWLINE)
             {
-                Token t(index, index+1, TokenType::NEWLINE, "\n");
+                Token t(index, index+1, line, TokenType::NEWLINE, "\n");
                 tokens.push_back(t);
             }
+            line++;
             index++;
             continue;
         }
@@ -85,7 +86,7 @@ std::vector<Token> Lexer::lex()
         }
 
     }
-    tokens.push_back(Token(index, index, TokenType::END_OF_FILE, "EOF"));
+    tokens.push_back(Token(index, index, line, TokenType::END_OF_FILE, "EOF"));
     return tokens;
 }
 
@@ -144,7 +145,7 @@ Token Lexer::lexString()
         idx++;
     }
 
-    Token t(index, idx, tt, acc);
+    Token t(index, idx, line, tt, acc);
     index = idx;
     return t;
 }
@@ -188,7 +189,7 @@ Token Lexer::lexChar()
         i++;
         acc.push_back(c);
     }
-    Token t(index, idx, TokenType::CHAR, acc);
+    Token t(index, idx, line, TokenType::CHAR, acc);
     index = idx;
     return t;
 }
@@ -197,7 +198,7 @@ bool Lexer::lexOperator(Token& res)
 {
     int idx = index;
     std::string acc;
-    std::string allowed = "0123456789=<>/@" + operators;
+    std::string allowed = "0123456789=<>/@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" + operators;
     std::vector<std::string> recognized = {"<", ">", "=", "!=", ">=", "<=",
         "+", "-", "*", "--", "!8", "@8", "!16", "@16", "!32", "@32", "!64", "@64"};
 
@@ -222,7 +223,7 @@ bool Lexer::lexOperator(Token& res)
     else
         tt = TokenType::OP;
 
-    Token t(index, idx, tt, acc);
+    Token t(index, idx, line, tt, acc);
     index = idx;
     res = t;
     return true;
@@ -232,7 +233,7 @@ Token Lexer::lexKeyword()
 {
     int idx = index;
     std::string acc;
-    std::string allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-*()+.@!?+_/%1234567890";
+    std::string allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-*().@!?+_/%1234567890";
 
     while (idx < input.length())
     {
@@ -326,7 +327,7 @@ Token Lexer::lexKeyword()
 
     //std::cout << "Lexed " << acc << " as " << std::to_string((int)tt) << std::endl;
 
-    Token res(index, idx, tt, acc);
+    Token res(index, idx, line, tt, acc);
     index = idx;
     return res;
 }
@@ -343,7 +344,7 @@ Token Lexer::lexInt()
         idx++;
         acc.push_back(c);
     }
-    Token t(index, idx, TokenType::INTVAL, acc);
+    Token t(index, idx, line, TokenType::INTVAL, acc);
     index = idx;
     return t;
 }
@@ -376,7 +377,7 @@ bool Lexer::lexHex(Token& res)
 
     if (hasPrefix && acc.length() > 2)
     {
-        Token t(index, idx, TokenType::INTVAL, acc);
+        Token t(index, idx, line, TokenType::INTVAL, acc);
         res = t;
         index = idx;
         return true;

@@ -155,6 +155,10 @@ std::string StringLitExpr::toString()
 {
     return "(StringLitExpr " + value + ")";
 }
+std::string StringLitExpr::getValue()
+{
+    return value;
+}
 
 
 ASTKind StringLitExpr::getASTKind()
@@ -254,6 +258,17 @@ std::string WhileExpr::toString()
     return "(WhileExpr " + condstr + " " + bodystr + ")";
 }
 
+IncludeCmd::IncludeCmd(std::string path) : path(path) {;}
+IncludeCmd::~IncludeCmd() {}
+std::string IncludeCmd::toString()
+{
+    return "(IncludeCmd " + path + ")";
+}
+ASTKind IncludeCmd::getASTKind()
+{
+    return ASTKind::INCLUDECMD;
+}
+
 
 AST::~AST() {}
 Cmd::~Cmd() {}
@@ -263,6 +278,10 @@ Expr::~Expr() {}
 FnSignature::FnSignature(std::vector<Type> ins, std::vector<Type> outs) : params(ins), retTypes(outs) {;}
 std::string FnSignature::toString()
 {
+    if (params.size() == 0 && retTypes.size() == 0)
+        return "";
+
+
     std::string ins;
     std::string outs;
 

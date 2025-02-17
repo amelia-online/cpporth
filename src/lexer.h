@@ -57,9 +57,10 @@ class Token
 public:
     int start;
     int end;
+    int line;
     TokenType type;
     std::string content;
-    Token(int, int, TokenType, std::string);
+    Token(int, int, int line, TokenType, std::string);
     Token();
     std::string toString();
 };
@@ -68,7 +69,8 @@ class Lexer
 {
    std::string input;
    size_t index;
-   const std::string alphabet = "abcdefghjiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ/%";
+   int line;
+   const std::string alphabet = "abcdefghjiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ/%+";
    const std::string digits = "0123456789";
    const std::string operators = "+-*!@=?><_";
 public:

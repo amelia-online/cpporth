@@ -1,14 +1,86 @@
 #include "runtime.h"
 #include <iostream>
 
-void Stack::push(long l)
+Data::Data(long l) : ptr(new long(l)), type(Type(TypeKind::INT)) {;}
+
+Data::Data(bool b) : ptr(new bool(b)), type(Type(TypeKind::BOOL)) {;}
+
+Data::Data(void *ptr) : ptr(ptr), type(Type(TypeKind::PTR)) {;}
+
+Data::~Data()
 {
-    data.push_back(l);
+    switch (type.kind)
+    {
+        case TypeKind::INT:
+            delete ((long *)ptr);
+            break;
+        case TypeKind::BOOL:
+            delete ((bool *)ptr);
+            break;
+        case TypeKind::PTR:
+            delete ((uchar *)ptr);
+            break;
+        default:
+            break;
+    }
 }
 
-long Stack::pop()
+Type Data::getType()
 {
-    long l = data[data.size() - 1];
+    return type;
+}
+
+long Data::getIntVal()
+{
+    return *((long *)ptr);
+}
+
+bool Data::getBoolVal()
+{
+    return *((bool *)ptr);
+}
+
+uchar *Data::getPtrVal()
+{
+    return ((uchar *)ptr);
+}
+
+
+void Stack::push(long l)
+{
+    Data d(l);
+    data.push_back(d);
+}
+
+void Stack::push(bool b)
+{
+    data.push_back(Data(b));
+}
+
+void Stack::push(void *ptr)
+{
+    data.push_back(Data(ptr));
+}
+
+Data Stack::peek()
+{
+    if (size() < 1)
+    {
+        std::cout << "Error: stack is empty." << std::endl;
+        throw new std::exception();
+    }
+    return data[data.size()-1];
+}
+
+Data Stack::pop()
+{
+    if (size() < 1)
+    {
+        std::cout << "Error: stack is empty." << std::endl;
+        throw new std::exception();
+    }
+
+    Data l = data[data.size() - 1];
     data.pop_back();
     return l;
 }
@@ -28,61 +100,14 @@ std::vector<AST*> toASTVec(std::vector<Expr*> exprs)
     return res;
 }
 
-void demo(std::vector<AST*> prog, Stack& stack, Env& env)
+// interp
+
+void interp(std::vector<AST*> prog, Stack& stack, Env& env)
 {
-    for (AST *ast : prog)
+    for (auto ast : prog)
     {
-        switch (ast->getASTKind())
-        {
-            case ASTKind::PROCCMD:
-            {
-                ProcCmd *p = (ProcCmd *)ast;
-                env.procs.insert(std::make_pair(p->name, p));
-                demo(toASTVec(p->body), stack, env);
-                break;
-            }
-            case ASTKind::VAREXPR:
-            {
-                stack.push(env.variables.at(((VarExpr *)ast)->name));
-                break;
-            }
-            case ASTKind::INTEXPR:
-            {
-                IntExpr *e = (IntExpr*)ast;
-                stack.push(e->value);
-                break;
-            }
-            case ASTKind::PRINTEXPR:
-            {
-                long l = stack.pop();
-                std::cout << l << std::endl;
-                break;
-            }
-            case ASTKind::LETSTMT:
-            {
-                LetExpr *let = (LetExpr *)ast;
-                for (auto i : let->idents)
-                {
-                    long l = stack.pop();
-                    env.variables.insert(std::make_pair(i, l));
-                }
-                demo(toASTVec(let->body), stack, env);
-                break;
-            }
-            case ASTKind::OPEXPR:
-            {
-                OpExpr *o = (OpExpr *)ast;
-                if (o->op == "+")
-                {
-                    long rhs = stack.pop();
-                    long lhs = stack.pop();
-                    stack.push(lhs + rhs);
-                }
-                break;
-            }
-            default:
-                std::cout << "Not implemented" << std::endl;
-                break;
-        }
+        // todo
+
+
     }
 }

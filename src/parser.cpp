@@ -16,7 +16,8 @@ void check(Token t, TokenType tt)
 {
     if (t.type != tt)
     {
-        std::cout << "Error: token types differ: " << std::to_string((int)t.type) << ":" << t.content << std::endl;
+        std::cout << "Error:" << t.line << ": token types differ: " << std::to_string((int)t.type)
+            << ":" << t.content << "(" << std::to_string((int)t.type) << ")" << std::endl;
         throw new std::exception();
     }
 }
@@ -108,6 +109,33 @@ LetExpr *Parser::parseLet()
     return new LetExpr(idents, body);
 }
 
+PeekExpr *Parser::parsePeek()
+{
+    std::vector<std::string> idents;
+    Token t = peek();
+
+    while (index < input.size())
+    {
+        index++;
+        t = peek();
+
+        if (t.type == TokenType::IN)
+            break;
+
+        if (t.type == TokenType::VAR)
+            idents.push_back(t.content);
+        else if (t.type == TokenType::NEWLINE)
+            continue;
+        else error("Error: expected identifer.");
+    }
+
+    index++;
+    std::vector<Expr*> body = parseExpr();
+    check(pop(), TokenType::END);
+    
+    return new PeekExpr(idents, body);
+}
+
 WhileExpr *Parser::parseWhile()
 {
     index++;
@@ -151,8 +179,9 @@ std::vector<Expr *> Parser::parseExpr()
         TokenType::DROP, TokenType::SWAP, TokenType::OVER,
         TokenType::DUP, TokenType::ROT, TokenType::HERE,
         TokenType::MAX, TokenType::MIN, TokenType::PRINT,
-        TokenType::SYSCALLN, TokenType::NEWLINE, 
-        TokenType::WHILE, TokenType::IF, TokenType::LET
+        TokenType::SYSCALLN, TokenType::NEWLINE, TokenType::PEEK,
+        TokenType::WHILE, TokenType::IF, TokenType::LET, TokenType::OFFSET,
+        TokenType::RESET, TokenType::MEMORY
     };
 
     while (std::find(allowed.begin(), allowed.end(), t.type) != allowed.end())
@@ -196,6 +225,9 @@ std::vector<Expr *> Parser::parseExpr()
             case TokenType::LET:
                 subexps.push_back(parseLet());
                 break;
+            case TokenType::PEEK:
+                subexps.push_back(parsePeek());
+                break;
             default:
                 subexps.push_back(new VarExpr(t.content));   
         }
@@ -227,7 +259,8 @@ FnSignature Parser::parseSignature()
     {
         t = peek();
         if (t.type == TokenType::IN) break;
-        else if (t.type == TokenType::BIKESHEDDER) { in = false; index++; }
+        else if (t.type == TokenType::BIKESHEDDER) { in = false; index++; continue; }
+        else if (t.type == TokenType::NEWLINE) {index++; continue;}
 
         Type type = parseType();
 
@@ -260,6 +293,19 @@ MemoryCmd *Parser::parseMemory()
     //index--;
     check(pop(), TokenType::END);
     return new MemoryCmd(ident, e);
+}
+
+IncludeCmd *Parser::parseInclude()
+{
+    index++;
+    std::vector<Expr*> path = parseExpr();
+    if (path.size() != 1 || path[0]->getASTKind() != ASTKind::STRINGLITEXPR)
+        error("Error: expected string.");
+    
+    std::string p = ((StringLitExpr *)path[0])->getValue();
+    delete path[0];
+
+    return new IncludeCmd(p);
 }
 
 std::vector<AST*> Parser::parse()
@@ -295,10 +341,11 @@ std::vector<AST*> Parser::parse()
                 break;
 
             case TokenType::INCLUDE:
+                asts.push_back(parseInclude());
                 break;
 
             default:
-                std::cout << "Not implemented: " << token.toString() << std::endl;
+                std::cout << "Error:" << token.line << ": Not implemented: " << token.toString() << std::endl;
                 throw new std::exception();
                 break;
         }

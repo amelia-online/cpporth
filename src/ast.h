@@ -23,6 +23,7 @@ enum class ASTKind
     PROCCMD,
     CONSTCMD,
     MEMORYCMD,
+    INCLUDECMD,
     CHAREXPR,
     STRINGLITEXPR,
     LETSTMT,
@@ -162,6 +163,7 @@ public:
 
 class PeekExpr : public Expr
 {
+public:
     std::vector<std::string> idents;
     std::vector<Expr*> body;
     PeekExpr(std::vector<std::string>, std::vector<Expr*>);
@@ -212,6 +214,16 @@ class ConstCmd : public Cmd
 public:
     ~ConstCmd() override;
     ConstCmd(std::string, std::vector<Expr *>);
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class IncludeCmd : public Cmd
+{
+public:
+    std::string path;
+    IncludeCmd(std::string);
+    ~IncludeCmd();
     std::string toString() override;
     ASTKind getASTKind() override;
 };
