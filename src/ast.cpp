@@ -16,6 +16,17 @@ std::string Type::toString()
     }
 }
 
+PrintExpr::~PrintExpr() {}
+std::string PrintExpr::toString()
+{
+    return "(PrintExpr print)";
+}
+
+ASTKind PrintExpr::getASTKind()
+{
+    return ASTKind::PRINTEXPR;
+}
+
 LetExpr::LetExpr(std::vector<std::string> idents, std::vector<Expr*> body) : idents(idents), body(body) {;}
 LetExpr::~LetExpr()
 {

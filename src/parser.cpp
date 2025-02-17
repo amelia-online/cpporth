@@ -176,6 +176,9 @@ std::vector<Expr *> Parser::parseExpr()
             case TokenType::FALSE:
                 subexps.push_back(new FalseExpr());
                 break;
+            case TokenType::PRINT:
+                subexps.push_back(new PrintExpr());
+                break;
             case TokenType::CSTRING:
                 // todo
             case TokenType::STRING:

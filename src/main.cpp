@@ -2,6 +2,7 @@
 #include <fstream>
 #include "lexer.h"
 #include "parser.h"
+#include "runtime.h"
 
 int main(int argc, char **argv)
 {
@@ -25,6 +26,12 @@ int main(int argc, char **argv)
         std::vector<AST*> asts = parser.parse();
         for (AST *ast : asts)
             std::cout << ast->toString() << std::endl;
+        std::cout << std::endl;
+        std::cout << std::endl;
+        std::cout << "Output:" << std::endl;
+        Stack stack;
+        Env env;
+        demo(asts, stack, env);
         parser.cleanup(asts);
     } else std::cout << "Could not open file" << std::endl;
 

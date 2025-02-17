@@ -27,6 +27,7 @@ enum class ASTKind
     STRINGLITEXPR,
     LETSTMT,
     PEEKSTMT,
+    PRINTEXPR
 };
 
 class AST 
@@ -55,8 +56,8 @@ public:
 
 class IntExpr : public Expr
 {
-    long value;
 public:
+    long value;
     IntExpr(long);
     long getValue();
     std::string toString() override;
@@ -99,8 +100,8 @@ public:
 
 class VarExpr : public Expr
 {
-    std::string name;
 public:
+    std::string name;
     VarExpr(std::string);
     std::string getName();
     std::string toString() override;
@@ -126,6 +127,14 @@ public:
     std::vector<Expr*> body;
     WhileExpr(std::vector<Expr*>, std::vector<Expr*>);
     ~WhileExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class PrintExpr : public Expr
+{
+public:
+    ~PrintExpr();
     std::string toString() override;
     ASTKind getASTKind() override;
 };
@@ -186,10 +195,10 @@ public:
 
 class ProcCmd : public Cmd
 {
-    std::string name;
     FnSignature sig;
-    std::vector<Expr*> body;
 public:
+    std::vector<Expr*> body;    
+    std::string name;           
     ProcCmd(std::string, FnSignature, std::vector<Expr*>);
     ~ProcCmd() override;
     std::string toString() override;

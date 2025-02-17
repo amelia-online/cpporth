@@ -258,7 +258,7 @@ Token Lexer::lexKeyword()
         tt = TokenType::IF;
     else if (acc == "if*")
         tt = TokenType::IFSTAR;
-    else if (acc == "PRINT")
+    else if (acc == "print")
         tt = TokenType::PRINT;
     else if (acc == "include")
         tt = TokenType::INCLUDE;
