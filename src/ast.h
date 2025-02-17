@@ -130,14 +130,35 @@ public:
     ASTKind getASTKind() override;
 };
 
+class OpExpr : public Expr
+{
+public:
+    std::string op;
+    OpExpr(std::string);
+    ~OpExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
 class LetExpr : public Expr
 {
-    // TODO
+public:
+    std::vector<std::string> idents;
+    std::vector<Expr*> body;
+    LetExpr(std::vector<std::string>, std::vector<Expr*>);
+    ~LetExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
 };  
 
 class PeekExpr : public Expr
 {
-    // TODO
+    std::vector<std::string> idents;
+    std::vector<Expr*> body;
+    PeekExpr(std::vector<std::string>, std::vector<Expr*>);
+    ~PeekExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
 };
 
 

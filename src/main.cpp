@@ -3,11 +3,6 @@
 #include "lexer.h"
 #include "parser.h"
 
-void lex(std::string);
-void parse(std::string);
-void typecheck(std::string);
-void interpret(std::string);
-
 int main(int argc, char **argv)
 {
     if (argc < 2)

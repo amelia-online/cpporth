@@ -16,6 +16,83 @@ std::string Type::toString()
     }
 }
 
+LetExpr::LetExpr(std::vector<std::string> idents, std::vector<Expr*> body) : idents(idents), body(body) {;}
+LetExpr::~LetExpr()
+{
+    for (auto e : body)
+        delete e;
+}
+std::string LetExpr::toString()
+{
+    std::string acc = "(";
+    int idx = 0;
+    for (auto ident : idents)
+    {
+        acc += ident + (idx < idents.size()-1 ? " " : "");
+        idx++;
+    }
+    acc += ")";
+
+    idx = 0;
+    std::string acc2 = "(";
+    for (auto e : body)
+    {
+        acc2 += e->toString() + (idx < body.size()-1 ? " " : "");
+        idx++;
+    }
+    acc2 += ")";
+
+    return "(LetExpr " + acc + " " + acc2 + ")";
+}
+ASTKind LetExpr::getASTKind()
+{
+    return ASTKind::LETSTMT;
+}
+
+PeekExpr::PeekExpr(std::vector<std::string> idents, std::vector<Expr*> body) : idents(idents), body(body) {;}
+PeekExpr::~PeekExpr()
+{
+    for (auto e : body)
+        delete e;
+}
+std::string PeekExpr::toString()
+{
+    std::string acc = "(";
+    int idx = 0;
+    for (auto ident : idents)
+    {
+        acc += ident + (idx < idents.size()-1 ? " " : "");
+        idx++;
+    }
+    acc += ")";
+
+    idx = 0;
+    std::string acc2 = "(";
+    for (auto e : body)
+    {
+        acc2 += e->toString() + (idx < body.size()-1 ? " " : "");
+        idx++;
+    }
+    acc2 += ")";
+
+    return "(LetExpr " + acc + " " + acc2 + ")";
+}
+ASTKind PeekExpr::getASTKind()
+{
+    return ASTKind::LETSTMT;
+}
+
+OpExpr::OpExpr(std::string op) : op(op) {;}
+OpExpr::~OpExpr() {}
+std::string OpExpr::toString()
+{
+    return "(OpExpr " + op + ")";
+}
+ASTKind OpExpr::getASTKind()
+{
+    return ASTKind::OPEXPR;
+}
+
 IntExpr::IntExpr(long val) : value(val) {;}
 std::string IntExpr::toString()
 {

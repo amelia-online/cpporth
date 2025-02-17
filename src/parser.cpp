@@ -6,6 +6,12 @@ void todo()
     throw new std::exception();
 }
 
+void error(std::string msg)
+{
+    std::cout << msg << std::endl;
+    throw new std::exception();
+}
+
 void check(Token t, TokenType tt)
 {
     if (t.type != tt)
@@ -75,6 +81,33 @@ Type Parser::parseType()
     }
 }
 
+LetExpr *Parser::parseLet()
+{
+    std::vector<std::string> idents;
+    Token t = peek();
+
+    while (index < input.size())
+    {
+        index++;
+        t = peek();
+
+        if (t.type == TokenType::IN)
+            break;
+
+        if (t.type == TokenType::VAR)
+            idents.push_back(t.content);
+        else if (t.type == TokenType::NEWLINE)
+            continue;
+        else error("Error: expected identifer.");
+    }
+
+    index++;
+    std::vector<Expr*> body = parseExpr();
+    check(pop(), TokenType::END);
+    
+    return new LetExpr(idents, body);
+}
+
 WhileExpr *Parser::parseWhile()
 {
     index++;
@@ -119,7 +152,7 @@ std::vector<Expr *> Parser::parseExpr()
         TokenType::DUP, TokenType::ROT, TokenType::HERE,
         TokenType::MAX, TokenType::MIN, TokenType::PRINT,
         TokenType::SYSCALLN, TokenType::NEWLINE, 
-        TokenType::WHILE, TokenType::IF
+        TokenType::WHILE, TokenType::IF, TokenType::LET
     };
 
     while (std::find(allowed.begin(), allowed.end(), t.type) != allowed.end())
@@ -143,15 +176,23 @@ std::vector<Expr *> Parser::parseExpr()
             case TokenType::FALSE:
                 subexps.push_back(new FalseExpr());
                 break;
+            case TokenType::CSTRING:
+                // todo
+            case TokenType::STRING:
+                subexps.push_back(new StringLitExpr(t.content));
+                break;
             case TokenType::WHILE:
                 subexps.push_back(parseWhile());
                 break;
             case TokenType::IF:
                 subexps.push_back(parseIf());
                 break;
-            //case TokenType::OP:
-                // todo
-            //    break;
+            case TokenType::OP:
+                subexps.push_back(new OpExpr(t.content));
+                break;
+            case TokenType::LET:
+                subexps.push_back(parseLet());
+                break;
             default:
                 subexps.push_back(new VarExpr(t.content));   
         }
