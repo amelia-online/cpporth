@@ -179,10 +179,10 @@ std::vector<Expr *> Parser::parseExpr()
     Token t = peek();
     std::vector<TokenType> allowed = { TokenType::INTVAL,
         TokenType::VAR,  TokenType::OP,
-        TokenType::CHAR,  TokenType::STRING,TokenType::CSTRING,
+        TokenType::CHAR,  TokenType::STRING, TokenType::CSTRING,
         TokenType::DROP, TokenType::SWAP, TokenType::OVER,
         TokenType::DUP, TokenType::ROT, TokenType::HERE,
-        TokenType::MAX, TokenType::MIN, TokenType::PRINT,
+        TokenType::MAX, TokenType::PRINT,
         TokenType::SYSCALLN, TokenType::NEWLINE, TokenType::PEEK,
         TokenType::WHILE, TokenType::IF, TokenType::LET, TokenType::OFFSET,
         TokenType::RESET, TokenType::MEMORY
@@ -203,6 +203,40 @@ std::vector<Expr *> Parser::parseExpr()
             case TokenType::INTVAL:
             {
                 subexps.push_back(new IntExpr((long)std::stol(t.content)));
+                break;
+            }
+            case TokenType::OFFSET:
+                subexps.push_back(new OffsetExpr());
+                break;
+            case TokenType::RESET:
+                subexps.push_back(new ResetExpr());
+                break;
+            case TokenType::SWAP:
+                subexps.push_back(new SwapExpr());
+                break;
+            case TokenType::DROP:
+                subexps.push_back(new DropExpr());
+                break;
+            case TokenType::DUP:
+                subexps.push_back(new DupExpr());
+                break;
+            case TokenType::OVER:
+                subexps.push_back(new OverExpr());
+                break;
+            case TokenType::ROT:
+                subexps.push_back(new RotExpr());
+                break;
+            case TokenType::HERE:
+                subexps.push_back(new HereExpr());
+                break;
+            case TokenType::MAX:
+                subexps.push_back(new MaxExpr());
+                break;
+            case TokenType::SYSCALLN:
+            {
+                std::string n = "";
+                n.push_back(t.content[t.content.length()-1]);
+                subexps.push_back(new SyscallExpr(std::stoi(n)));
                 break;
             }
             case TokenType::PRINT:

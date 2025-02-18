@@ -299,6 +299,120 @@ std::string WhileExpr::toString()
     return "(WhileExpr " + condstr + " " + bodystr + ")";
 }
 
+OffsetExpr::OffsetExpr() {;}
+OffsetExpr::~OffsetExpr() {;}
+std::string OffsetExpr::toString()
+{
+    return "(OffsetExpr offset)";
+}
+ASTKind OffsetExpr::getASTKind()
+{
+    return ASTKind::OFFSETEXPR;
+}
+
+ResetExpr::ResetExpr() {;}
+ResetExpr::~ResetExpr() {;}
+std::string ResetExpr::toString()
+{
+    return "(ResetExpr reset)";
+}
+ASTKind ResetExpr::getASTKind()
+{
+    return ASTKind::RESETEXPR;
+}
+
+SwapExpr::SwapExpr() {;}
+SwapExpr::~SwapExpr() {;}
+std::string SwapExpr::toString()
+{
+    return "(SwapExpr swap)";
+}
+ASTKind SwapExpr::getASTKind()
+{
+    return ASTKind::SWAPEXPR;
+}
+
+DropExpr::DropExpr() {;}
+DropExpr::~DropExpr() {;}
+std::string DropExpr::toString()
+{
+    return "(DropExpr drop)";
+}
+ASTKind DropExpr::getASTKind()
+{
+    return ASTKind::DROPEXPR;
+}
+
+DupExpr::DupExpr() {;}
+DupExpr::~DupExpr() {;}
+std::string DupExpr::toString()
+{
+    return "(DupExpr dup)";
+}
+ASTKind DupExpr::getASTKind()
+{
+    return ASTKind::DUPEXPR;
+}
+
+OverExpr::OverExpr() {;}
+OverExpr::~OverExpr() {;}
+std::string OverExpr::toString()
+{
+    return "(OverExpr over)";
+}
+ASTKind OverExpr::getASTKind()
+{
+    return ASTKind::OVEREXPR;
+}
+
+RotExpr::RotExpr() {;}
+RotExpr::~RotExpr() {;}
+std::string RotExpr::toString()
+{
+    return "(RotExpr rot)";
+}
+ASTKind RotExpr::getASTKind()
+{
+    return ASTKind::ROTEXPR;
+}
+
+HereExpr::HereExpr() {;}
+HereExpr::~HereExpr() {;}
+std::string HereExpr::toString()
+{
+    return "(HereExpr here)";
+}
+ASTKind HereExpr::getASTKind()
+{
+    return ASTKind::HEREEXPR;
+}
+
+SyscallExpr::SyscallExpr(int n) : n(n) {;}
+SyscallExpr::~SyscallExpr() {;}
+std::string SyscallExpr::toString()
+{
+    return "(SyscallExpr syscall" + std::to_string(n) + ")";
+}
+ASTKind SyscallExpr::getASTKind()
+{
+    return ASTKind::SYSCALLEXPR;
+}
+int SyscallExpr::getNumArgs()
+{
+    return n;
+}
+
+MaxExpr::MaxExpr() {;}
+MaxExpr::~MaxExpr() {;}
+std::string MaxExpr::toString()
+{
+    return "(MaxExpr max)";
+}
+ASTKind MaxExpr::getASTKind()
+{
+    return ASTKind::MAXEXPR;
+}
+
 IncludeCmd::IncludeCmd(std::string path) : path(path) {;}
 IncludeCmd::~IncludeCmd() {}
 std::string IncludeCmd::toString()
@@ -341,7 +455,7 @@ std::string FnSignature::toString()
         j++;
     }
 
-    return "(" + ins + " -- " + outs + ")";
+    return "(" + ins + "-- " + outs + ")";
 }
 
 ProcCmd::ProcCmd(std::string name, FnSignature sig, std::vector<Expr*> body) : name(name), sig(sig), body(body) {;}

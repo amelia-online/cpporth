@@ -307,8 +307,6 @@ Token Lexer::lexKeyword()
         tt = TokenType::ADDROF;
     else if (acc == "max")
         tt = TokenType::MAX;
-    else if (acc == "min")
-        tt = TokenType::MIN;
     else if (acc == "cast(int)" || acc == "cast(bool)" || acc == "cast(ptr)" 
         || acc == "and" || acc == "or" || acc == "not" || acc == "shr" || acc == "shl" 
         || acc == "idivmod" || acc == "call-like")

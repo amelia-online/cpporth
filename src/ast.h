@@ -29,7 +29,17 @@ enum class ASTKind
     LETSTMT,
     PEEKSTMT,
     PRINTEXPR,
-    MEMORYEXPR
+    MEMORYEXPR,
+    OFFSETEXPR,
+    RESETEXPR,
+    SWAPEXPR,
+    DROPEXPR,
+    DUPEXPR,
+    OVEREXPR,
+    ROTEXPR,
+    HEREEXPR,
+    SYSCALLEXPR,
+    MAXEXPR
 };
 
 class AST 
@@ -186,6 +196,97 @@ public:
     ASTKind getASTKind() override;
 };
 
+class OffsetExpr : public Expr
+{
+public:
+    OffsetExpr();
+    ~OffsetExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class ResetExpr : public Expr
+{
+public:
+    ResetExpr();
+    ~ResetExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class SwapExpr : public Expr
+{
+public:
+    SwapExpr();
+    ~SwapExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class DropExpr : public Expr
+{
+public:
+    DropExpr();
+    ~DropExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class DupExpr : public Expr
+{
+public:
+    DupExpr();
+    ~DupExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class OverExpr : public Expr
+{
+public:
+    OverExpr();
+    ~OverExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class RotExpr : public Expr
+{
+public:
+    RotExpr();
+    ~RotExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class HereExpr : public Expr
+{
+public:
+    HereExpr();
+    ~HereExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class SyscallExpr : public Expr
+{
+    int n;
+public:
+    SyscallExpr(int);
+    ~SyscallExpr();
+    int getNumArgs();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class MaxExpr : public Expr
+{
+public:
+    MaxExpr();
+    ~MaxExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
 
 class Cmd : public AST
 {

@@ -26,7 +26,6 @@ enum class TokenType
     OVER, // 16
     OP,
     MAX,
-    MIN,
     MEMORY,
     ELSE,
     DO,
