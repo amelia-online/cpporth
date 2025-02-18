@@ -16,7 +16,7 @@ void check(Token t, TokenType tt)
 {
     if (t.type != tt)
     {
-        std::cout << "Error:" << t.line << ": token types differ: " << std::to_string((int)t.type)
+        std::cout << "Error:" << t.line << ": token types differ: " << std::to_string((int)tt)
             << ":" << t.content << "(" << std::to_string((int)t.type) << ")" << std::endl;
         throw new std::exception();
     }
@@ -163,9 +163,13 @@ IfExpr *Parser::parseIf()
 
     elze = parseExpr();
     IfExpr *next = nullptr;
-    if (peek().type == TokenType::IFSTAR)
+
+    //std::cout << peek().content << std::endl;
+    if (peek().type == TokenType::IFSTAR) {
         next = parseIf();
+    }
     else check(pop(), TokenType::END);
+
     return new IfExpr(body, elze, next);
 }
 
@@ -209,6 +213,7 @@ std::vector<Expr *> Parser::parseExpr()
                 MemoryCmd *m = parseMemory();
                 MemoryExpr *res = m->toMemoryExpr();
                 subexps.push_back(res);
+                index--;
                 break;
             }
             case TokenType::CSTRING:
@@ -218,18 +223,23 @@ std::vector<Expr *> Parser::parseExpr()
                 break;
             case TokenType::WHILE:
                 subexps.push_back(parseWhile());
+                index--;
                 break;
             case TokenType::IF:
                 subexps.push_back(parseIf());
+                index--;
+                //std::cout << peek().content << std::endl;
                 break;
             case TokenType::OP:
                 subexps.push_back(new OpExpr(t.content));
                 break;
             case TokenType::LET:
                 subexps.push_back(parseLet());
+                index--;
                 break;
             case TokenType::PEEK:
                 subexps.push_back(parsePeek());
+                index--;
                 break;
             default:
                 subexps.push_back(new VarExpr(t.content));   
