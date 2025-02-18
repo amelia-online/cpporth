@@ -28,9 +28,11 @@ int main(int argc, char **argv)
 
         Parser parser(tokens);
         std::vector<AST*> asts = parser.parse();
-        for (AST *ast : asts)
-            std::cout << ast->toString() << std::endl;
-       
+        //for (AST *ast : asts)
+        //    std::cout << ast->toString() << std::endl;
+        Stack s;
+        Env e;
+        interp(asts, s, e);
         parser.cleanup(asts);
     } else std::cout << "Could not open file" << std::endl;
 

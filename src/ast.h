@@ -360,9 +360,9 @@ public:
 
 class ConstCmd : public Cmd
 {
+public:
     std::string ident;
     std::vector<Expr *> body;
-public:
     ~ConstCmd() override;
     ConstCmd(std::string, std::vector<Expr *>);
     std::string toString() override;
@@ -381,9 +381,9 @@ public:
 
 class MemoryCmd : public Cmd
 {
-  std::string ident;
-  std::vector<Expr *> body;
 public:
+    std::string ident;
+    std::vector<Expr *> body;
     MemoryCmd(std::string, std::vector<Expr *>);
     ~MemoryCmd() override;
     std::string toString() override;

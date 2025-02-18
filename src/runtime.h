@@ -8,6 +8,7 @@ typedef unsigned char uchar;
 class Value
 {
     Type type;
+    
 public:
     // todo
 };
@@ -42,13 +43,15 @@ public:
     void push(long);
     void push(bool);
     void push(void *);
+    void push(Data);
     Data pop();
     Data peek();
     int size();
 };
 
-std::vector<AST*> toASTVec(std::vector<Expr*>);
-void interp(std::vector<AST*>, Stack&, Env&);
+std::vector<AST*> toAstVec(std::vector<Expr*>);
+Data interp(std::vector<AST*>, Stack&, Env&);
+Data interpExpr(std::vector<Expr*>, Stack&, Env&);
 void typecheck(std::vector<AST*>);
 
 #endif // CPPORTH_RUNTIME_H
