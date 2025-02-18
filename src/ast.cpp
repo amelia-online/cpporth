@@ -295,8 +295,62 @@ std::string WhileExpr::toString()
         bodystr += e->toString() + (i < body.size()-1 ? " " : "");
         i++;
     }
+    bodystr += ")";
 
     return "(WhileExpr " + condstr + " " + bodystr + ")";
+}
+
+AssertExpr::AssertExpr(std::string msg, std::vector<Expr*> body) : msg(msg), body(body) {;}
+AssertExpr::~AssertExpr()
+{
+    for (auto e : body)
+        delete e;
+}
+
+std::string AssertExpr::toString()
+{
+    std::string acc = "(";
+    int idx = 0;
+    for (auto e : body)
+    {
+        acc += e->toString() + (idx < body.size()-1 ? " " : ")");
+        idx++;
+    }
+    return "(AssertExpr " + msg + " " + acc + ")";
+}
+
+AssertCmd *AssertExpr::asCmd()
+{
+    return new AssertCmd(msg, body);
+}
+
+ASTKind AssertExpr::getASTKind()
+{
+    return ASTKind::ASSERTEXPR;
+}
+
+AssertCmd::AssertCmd(std::string msg, std::vector<Expr*> body) : msg(msg), body(body) {;}
+AssertCmd::~AssertCmd()
+{
+    for (auto e : body)
+        delete e;
+}
+
+std::string AssertCmd::toString()
+{
+    std::string acc = "(";
+    int idx = 0;
+    for (auto e : body)
+    {
+        acc += e->toString() + (idx < body.size()-1 ? " " : ")");
+        idx++;
+    }
+    return "(AssertExpr " + msg + " " + acc + ")";
+}
+
+ASTKind AssertCmd::getASTKind()
+{
+    return ASTKind::ASSERTCMD;
 }
 
 OffsetExpr::OffsetExpr() {;}
@@ -319,6 +373,17 @@ std::string ResetExpr::toString()
 ASTKind ResetExpr::getASTKind()
 {
     return ASTKind::RESETEXPR;
+}
+
+AddrOfExpr::AddrOfExpr() {;}
+AddrOfExpr::~AddrOfExpr() {;}
+std::string AddrOfExpr::toString()
+{
+    return "(AddrOfExpr addr-of)";
+}
+ASTKind AddrOfExpr::getASTKind()
+{
+    return ASTKind::ADDROFEXPR;
 }
 
 SwapExpr::SwapExpr() {;}

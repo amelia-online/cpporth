@@ -23,6 +23,7 @@ public:
     ProcCmd *parseProc();
     LetExpr *parseLet();
     PeekExpr *parsePeek();
+    AssertExpr *parseAssert();
     IncludeCmd *parseInclude();
     std::vector<Expr *> parseExpr();
     Type parseType();

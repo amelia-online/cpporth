@@ -301,8 +301,6 @@ Token Lexer::lexKeyword()
         tt = TokenType::PTR;
     else if (acc == "else")
         tt = TokenType::ELSE;
-    else if (acc == "addr")
-        tt = TokenType::ADDR;
     else if (acc == "addr-of")
         tt = TokenType::ADDROF;
     else if (acc == "max")

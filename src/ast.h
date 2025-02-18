@@ -39,7 +39,10 @@ enum class ASTKind
     ROTEXPR,
     HEREEXPR,
     SYSCALLEXPR,
-    MAXEXPR
+    MAXEXPR,
+    ASSERTEXPR,
+    ADDROFEXPR,
+    ASSERTCMD,
 };
 
 class AST 
@@ -49,6 +52,14 @@ public:
     virtual std::string toString() = 0;
     virtual ASTKind getASTKind() = 0;
 };
+
+class Cmd : public AST
+{
+public:
+    virtual ~Cmd() = 0;
+    //virtual std::string toString() = 0;
+};
+
 
 class Type
 {  
@@ -64,6 +75,17 @@ public:
     virtual ~Expr() = 0;
     virtual std::string toString() = 0;
     virtual ASTKind getASTKind() = 0;
+};
+
+class AssertCmd : public Cmd
+{
+public:
+    std::string msg;
+    std::vector<Expr*> body;
+    AssertCmd(std::string, std::vector<Expr*>);
+    ~AssertCmd();
+    std::string toString() override;
+    ASTKind getASTKind() override;
 };
 
 class IntExpr : public Expr
@@ -164,6 +186,18 @@ public:
     ASTKind getASTKind() override;
 };
 
+class AssertExpr : public Expr
+{
+public:
+    std::string msg;
+    std::vector<Expr*> body;
+    AssertExpr(std::string, std::vector<Expr*>);
+    ~AssertExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+    AssertCmd *asCmd();
+};
+
 class OpExpr : public Expr
 {
 public:
@@ -210,6 +244,15 @@ class ResetExpr : public Expr
 public:
     ResetExpr();
     ~ResetExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class AddrOfExpr : public Expr
+{
+public:
+    AddrOfExpr();
+    ~AddrOfExpr();
     std::string toString() override;
     ASTKind getASTKind() override;
 };
@@ -288,13 +331,6 @@ public:
     ASTKind getASTKind() override;
 };
 
-class Cmd : public AST
-{
-public:
-    virtual ~Cmd() = 0;
-    //virtual std::string toString() = 0;
-};
-
 class Stmt : public AST 
 {
 public:
@@ -354,6 +390,7 @@ public:
     ASTKind getASTKind() override;
     MemoryExpr *toMemoryExpr();
 };
+
 
 
 

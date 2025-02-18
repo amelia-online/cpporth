@@ -173,6 +173,16 @@ IfExpr *Parser::parseIf()
     return new IfExpr(body, elze, next);
 }
 
+AssertExpr *Parser::parseAssert()
+{
+    index++;
+    check(peek(), TokenType::STRING);
+    std::string msg = pop().content;
+    std::vector<Expr*> body = parseExpr();
+    check(pop(), TokenType::END);
+    return new AssertExpr(msg, body);
+}
+
 std::vector<Expr *> Parser::parseExpr()
 {
     std::vector<Expr *> subexps;
@@ -185,7 +195,7 @@ std::vector<Expr *> Parser::parseExpr()
         TokenType::MAX, TokenType::PRINT,
         TokenType::SYSCALLN, TokenType::NEWLINE, TokenType::PEEK,
         TokenType::WHILE, TokenType::IF, TokenType::LET, TokenType::OFFSET,
-        TokenType::RESET, TokenType::MEMORY
+        TokenType::RESET, TokenType::MEMORY, TokenType::ASSERT, TokenType::ADDROF
     };
 
     while (std::find(allowed.begin(), allowed.end(), t.type) != allowed.end())
@@ -213,6 +223,13 @@ std::vector<Expr *> Parser::parseExpr()
                 break;
             case TokenType::SWAP:
                 subexps.push_back(new SwapExpr());
+                break;
+            case TokenType::ADDROF:
+                subexps.push_back(new AddrOfExpr());
+                break;
+            case TokenType::ASSERT:
+                subexps.push_back(parseAssert());
+                index--;
                 break;
             case TokenType::DROP:
                 subexps.push_back(new DropExpr());
@@ -387,6 +404,10 @@ std::vector<AST*> Parser::parse()
                 asts.push_back(parseProc());
                 break;
 
+            case TokenType::ASSERT:
+                asts.push_back(parseAssert()->asCmd());
+                break;
+                
             case TokenType::INCLUDE:
                 asts.push_back(parseInclude());
                 break;
