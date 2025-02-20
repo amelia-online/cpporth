@@ -339,17 +339,17 @@ public:
 
 class FnSignature
 {
+public:
     std::vector<Type> params;
     std::vector<Type> retTypes;
-public:
     FnSignature(std::vector<Type>, std::vector<Type>);
     std::string toString();
 };
 
 class ProcCmd : public Cmd
 {
-    FnSignature sig;
 public:
+    FnSignature sig;
     std::vector<Expr*> body;    
     std::string name;           
     ProcCmd(std::string, FnSignature, std::vector<Expr*>);

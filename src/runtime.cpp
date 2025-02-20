@@ -1,65 +1,114 @@
 #include "runtime.h"
 #include <iostream>
 
-Data::Data(long l) : ptr(new long(l)), type(Type(TypeKind::INT)) {;}
-
-Data::Data(bool b) : ptr(new bool(b)), type(Type(TypeKind::BOOL)) {;}
-
-Data::Data(void *ptr) : ptr(ptr), type(Type(TypeKind::PTR)) {;}
-
-Data::~Data()
+Env::Env(int argc, char** argv)
 {
-    switch (type.kind)
-    {
-        case TypeKind::INT:
-            delete ((long *)ptr);
-            break;
-        case TypeKind::BOOL:
-            delete ((bool *)ptr);
-            break;
-        case TypeKind::PTR:
-            delete ((uchar *)ptr);
-            break;
-        default:
-            break;
-    }
+    variables.insert(std::make_pair("argc", Data(argc, TypeKind::INT)));
+    // todo: argv
 }
 
-Type Data::getType()
+Data::Data() : value(-1), type(TypeKind::ADDR) {;}
+Data::Data(long val, TypeKind t) : value(val), type(t) {;}
+
+TypeKind Data::getType() const
 {
     return type;
 }
 
-long Data::getIntVal()
+bool Data::isTrue()
 {
-    return *((long *)ptr);
+    return type == TypeKind::BOOL && value == 1;
 }
 
-bool Data::getBoolVal()
+bool Data::isPtr()
 {
-    return *((bool *)ptr);
+    return type == TypeKind::PTR;
 }
 
-uchar *Data::getPtrVal()
+bool Data::isInt()
 {
-    return ((uchar *)ptr);
+    return type == TypeKind::INT;
 }
 
+bool Data::isFalse()
+{
+    return type == TypeKind::BOOL && value == 0;
+}
+
+void Data::assertType(TypeKind t) const
+{
+    if (type != t)
+    {
+        std::cout << "Error: Type mismatch.\n";
+        throw new std::exception();
+    }
+}
+
+long Data::getValue() const
+{
+    return value;
+}
 
 void Stack::push(long l)
 {
-    Data d(l);
+    Data d(l, TypeKind::INT);
+    data.push_back(d);
+}
+
+Stack Stack::scope(const ProcCmd *pcmd)
+{
+    Stack s;
+    int incount = pcmd->sig.params.size();
+    return s;
+}
+
+void Stack::clear()
+{
+    data.clear();
+}
+
+std::vector<Data> Stack::toVector() const
+{
+    std::vector<Data> res;
+    for (auto i : data)
+        res.push_back(i);
+    return res;
+}
+
+void Stack::append(const Stack& other)
+{
+    std::vector<Data> items = other.toVector();
+    for (auto i : items)
+        data.push_back(i);
+}
+
+bool Stack::isEmpty()
+{
+    return data.size() == 0;
+}
+
+void Stack::assertMinSize(int s)
+{
+    if (data.size() < s)
+    {
+        std::cout << "Error: operation requires at least " << s << " items\n";
+        throw new std::exception();
+    }
+}
+
+void Stack::push(Data d)
+{
     data.push_back(d);
 }
 
 void Stack::push(bool b)
 {
-    data.push_back(Data(b));
+    data.push_back(Data((long)b, TypeKind::BOOL));
 }
 
 void Stack::push(void *ptr)
 {
-    data.push_back(Data(ptr));
+    data.push_back(Data((long)ptr, TypeKind::PTR));
 }
 
 Data Stack::peek()
@@ -129,6 +178,12 @@ Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
         }
     }
 
+    if (env.procs.find("main") == env.procs.end())
+    {
+        std::cout << "Error: Main function not found.\n";
+        throw new std::exception();
+    }
+
     return interpExpr(env.procs.at("main")->body, stack, env);
 }
 
@@ -136,6 +191,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 {
     for (auto exp : exps)
     {
+        //std::cout << exp->toString() << std::endl;
         switch (exp->getASTKind())
         {
             case ASTKind::INTEXPR:
@@ -150,14 +206,141 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                 VarExpr *v = (VarExpr *)exp;
                 
                 if (env.procs.find(v->name) != env.procs.end())
+                {
                     interpExpr(env.procs.at(v->name)->body, stack, env);
+                }
                 else if (env.variables.find(v->name) != env.variables.end())
                     stack.push(env.variables.at(v->name));
-
-
+                break;
             }
+
+            case ASTKind::WHILEEXPR:
+            {
+                WhileExpr *w = (WhileExpr *)exp;
+                while (interpExpr(w->cond, stack, env).isTrue()) 
+                {
+                    stack.pop();
+                    interpExpr(w->body, stack, env);
+                }
+
+                break;
+            }
+
+            case ASTKind::STRINGLITEXPR:
+            {
+                StringLitExpr *s = (StringLitExpr *)exp;
+                auto str = s->getValue();
+                // todo
+                break;
+            }
+
+            case ASTKind::IFEXPR:
+            {
+                auto f = (IfExpr *)exp;
+
+                if (stack.peek().isTrue())
+                    interpExpr(f->then, stack, env);
+                else if (f->elze.size() != 0)
+                    interpExpr(f->elze, stack, env);
+
+                if (f->next && f->elze.size() > 0)
+                {
+                    std::vector<Expr*> expr = {f->next};
+                    interpExpr(expr, stack, env);
+                }
+            
+                break;
+            }
+
+            case ASTKind::LETSTMT:
+            {
+                auto let = (LetExpr *)exp;
+                stack.assertMinSize(let->idents.size());
+                for (int i = let->idents.size()-1; i > 0; i--)
+                    env.variables.insert(std::make_pair(let->idents[i], stack.pop()));
+                
+                interpExpr(let->body, stack, env);
+
+                break;
+            }
+
+            case ASTKind::OPEXPR:
+            {
+                auto op = (OpExpr *)exp;
+                
+                if (op->op == "+")
+                {
+                    stack.assertMinSize(2);
+                    auto lhs = stack.pop();
+                    auto rhs = stack.pop();
+                    stack.push(lhs.getValue() + rhs.getValue());
+                }
+
+                else if (op->op == "<")
+                {
+                    stack.assertMinSize(2);
+                    auto rhs = stack.pop();
+                    auto lhs = stack.pop();
+                    if (lhs.getValue() < rhs.getValue())
+                        stack.push(true);
+                    else
+                        stack.push(false);
+                }
+
+                break;
+            }
+
+            case ASTKind::PRINTEXPR:
+                stack.assertMinSize(1);
+                std::cout << stack.pop().getValue() << std::endl;
+                break;
+
+            case ASTKind::DUPEXPR:
+            {
+                stack.assertMinSize(1);
+                stack.push(stack.peek());
+                break;
+            }
+
+            case ASTKind::DROPEXPR:
+            {
+                stack.assertMinSize(1);
+                stack.pop();
+                break;
+            }
+
+            case ASTKind::SWAPEXPR:
+            {
+                stack.assertMinSize(1);
+                auto rhs = stack.pop();
+                auto lhs = stack.pop();
+                stack.push(rhs);
+                stack.push(lhs);
+                break;
+            }
+
+            case ASTKind::ROTEXPR:
+            {
+                stack.assertMinSize(3);
+                // todo
+                break;
+            }
+
+            case ASTKind::OVEREXPR:
+            {
+                stack.assertMinSize(2);
+                auto b = stack.pop();
+                auto a = stack.pop();
+                stack.push(a);
+                stack.push(b);
+                stack.push(a);
+                break;
+            }
+
+            default:
+                std::cout << "Not implemented: " << ((int)exp->getASTKind()) << std::endl;
         }
     }
 
-    return stack.pop();
+    return stack.peek();
 }

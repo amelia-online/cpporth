@@ -31,8 +31,9 @@ int main(int argc, char **argv)
         //for (AST *ast : asts)
         //    std::cout << ast->toString() << std::endl;
         Stack s;
-        Env e;
+        Env e(argc, argv);
         interp(asts, s, e);
+
         parser.cleanup(asts);
     } else std::cout << "Could not open file" << std::endl;
 

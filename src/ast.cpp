@@ -156,6 +156,11 @@ ASTKind IntExpr::getASTKind()
     return ASTKind::INTEXPR;
 }
 
+long IntExpr::getValue()
+{
+    return value;
+}
+
 std::string TrueExpr::toString()
 {
     return "(TrueExpr true)";
