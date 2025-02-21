@@ -268,7 +268,8 @@ std::vector<Expr *> Parser::parseExpr()
                 break;
             }
             case TokenType::CSTRING:
-                // todo
+                subexps.push_back(new StringLitExpr(t.content + "\\0"));
+                break;
             case TokenType::STRING:
                 subexps.push_back(new StringLitExpr(t.content));
                 break;
@@ -359,12 +360,20 @@ MemoryCmd *Parser::parseMemory()
     return new MemoryCmd(ident, e);
 }
 
+// TODO: fix.
 IncludeCmd *Parser::parseInclude()
 {
     index++;
-    std::vector<Expr*> path = parseExpr();
-    if (path.size() != 1 || path[0]->getASTKind() != ASTKind::STRINGLITEXPR)
+    std::vector<Expr*> path = parseExpr(); // maybe dont use this.
+    if (path.size() != 1 || path[0]->getASTKind() != ASTKind::STRINGLITEXPR) {
+
+        for (auto a : path)
+            std::cout << a->toString() << std::endl;
+
         error("Error: expected string.");
+    }
+
+    //check(peek(), TokenType::NEWLINE);
     
     std::string p = ((StringLitExpr *)path[0])->getValue();
     delete path[0];

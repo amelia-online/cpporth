@@ -48,6 +48,7 @@ enum class ASTKind
 class AST 
 { 
 public:
+    int line;
     virtual ~AST() = 0;
     virtual std::string toString() = 0;
     virtual ASTKind getASTKind() = 0;
@@ -129,6 +130,7 @@ public:
     StringLitExpr(std::string);
     std::string getValue();
     std::string toString() override;
+    
     ASTKind getASTKind() override;
 };
 

@@ -46,7 +46,7 @@ enum class TokenType
     END_OF_FILE,
     SYSCALLN,
     CHAR,
-    ADDROF // 40
+    ADDROF, // 40
 };
 
 class Token

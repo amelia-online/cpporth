@@ -8,6 +8,7 @@ class Data
 {
     long value;
     TypeKind type;
+    bool isNone_;
 public:
     Data(long, TypeKind);
     Data();
@@ -18,6 +19,7 @@ public:
     bool isFalse();
     bool isPtr();
     bool isInt();
+    bool isNone();
 };
 
 class Env
@@ -45,6 +47,7 @@ public:
     std::vector<Data> toVector() const;
     Data pop();
     Data peek();
+    Data top();
     Stack scope(const ProcCmd*);
     int size();
 };
