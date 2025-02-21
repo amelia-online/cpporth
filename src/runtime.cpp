@@ -240,6 +240,10 @@ Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
             {
                 auto ic = (IncludeCmd *)ast;
                 include(realString(ic->path), env);
+
+                for (auto [key, val] : env.variables)
+                    std::cout << "Included: " << key << " : " << val.getValue() << std::endl;
+
                 break;
             }
             case ASTKind::MEMORYCMD:
@@ -348,7 +352,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
             {
                 auto let = (LetExpr *)exp;
                 stack.assertMinSize(let->idents.size());
-                for (int i = let->idents.size()-1; i > 0; i--)
+                for (int i = let->idents.size()-1; i >= 0; i--)
                     env.variables.insert(std::make_pair(let->idents[i], stack.pop()));
                 
                 interpExpr(let->body, stack, env);
