@@ -1,7 +1,7 @@
 CC = g++
 FLAGS = -g -fsanitize=address -fsanitize=undefined -std=c++20
 TEST=src/test.txt
-OBJS=lexer.o main.o parser.o ast.o runtime.o helper.o
+OBJS=lexer.o main.o parser.o ast.o runtime.o helper.o syscalls.o
 
 all: cpporth
 
@@ -11,8 +11,11 @@ run: cpporth
 clean:
 	rm *.o ./cpporth
 
-cpporth: main.o lexer.o parser.o ast.o runtime.o helper.o
+cpporth: main.o lexer.o parser.o ast.o runtime.o helper.o syscalls.o
 	$(CC) $(FLAGS) $(OBJS) -o cpporth
+
+syscalls.o: src/syscalls.h src/syscalls.cpp
+	$(CC) $(FLAGS) -c src/syscalls.cpp
 
 helper.o: src/helper.cpp src/helper.h
 	$(CC) $(FLAGS) -c src/helper.cpp

@@ -2,6 +2,7 @@
 #include "helper.h"
 #include "lexer.h"
 #include "parser.h"
+#include "syscalls.h"
 #include <iostream>
 
 Env::Env(int argc, char** argv)
@@ -303,7 +304,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
     for (auto exp : exps)
     {
         //std::cout << stack.toString() << std::endl;
-        //std::cout << exp->toString() << std::endl;
+
         switch (exp->getASTKind())
         {
             case ASTKind::INTEXPR:
@@ -352,6 +353,23 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                 char *ptr = new char[len];
                 std::strncpy(ptr, str.data(), len);
                 stack.push(ptr);
+                break;
+            }
+
+            case ASTKind::SYSCALLEXPR:
+            {
+                auto e = (SyscallExpr *)exp;
+                
+                stack.assertMinSize(e->getNumArgs()+1, exp->line);
+                stack.peek().assertType(TypeKind::INT, exp->line);
+                int sysnum = stack.pop().getValue() & 0xFFFFFF;
+
+                std::vector<long> args;
+
+                for (int i = 0; i < e->getNumArgs(); i++)
+                    args.push_back(stack.pop().getValue());
+                
+                stack.push(syscall(sysnum, args));
                 break;
             }
 
@@ -615,6 +633,12 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
             {
                 stack.assertMinSize(1, exp->line);
                 stack.push(stack.peek());
+                break;
+            }
+
+            case ASTKind::HEREEXPR:
+            {
+                // todo
                 break;
             }
 
