@@ -36,6 +36,9 @@ std::string realString(std::string rep)
                 case 'n':
                     res.push_back('\n');
                     break;
+                case '0':
+                    res.push_back('\0');
+                    break;
                 case '\\':
                     res.push_back('\\');
                     break;
@@ -44,6 +47,7 @@ std::string realString(std::string rep)
                     break;
                 case '"':
                     res.push_back('"');
+                    break;
                 case '\'':
                     res.push_back('\'');
                     break;

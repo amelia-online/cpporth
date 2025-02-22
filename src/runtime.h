@@ -50,6 +50,7 @@ public:
     Data top();
     Stack scope(const ProcCmd*);
     int size();
+    std::string toString();
 };
 
 std::vector<AST*> toAstVec(std::vector<Expr*>);

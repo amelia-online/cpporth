@@ -70,6 +70,20 @@ Stack Stack::scope(const ProcCmd *pcmd)
     return s;
 }
 
+std::string Stack::toString()
+{
+    std::string acc = "[";
+    int idx = 0;
+    for (auto d : data)
+    {
+        acc += std::to_string(d.getValue()) + (idx < data.size()-1 ? " " : "");
+        idx++;
+    }
+    acc += "]";
+
+    return acc;
+}
+
 void Stack::clear()
 {
     data.clear();
@@ -183,9 +197,12 @@ void include(std::string path, Env& env)
             {
                 Stack s;
                 ConstCmd *c = (ConstCmd *)ast;
-                env.variables.insert(std::make_pair(c->ident, interpExpr(c->body, s, env)));
+                auto res = interpExpr(c->body, s, env);
+                Data d(res.getValue() + (long)env.offset, res.getType());
+                env.variables.insert(std::make_pair(c->ident, d));
                 break;
             }
+
             case ASTKind::INCLUDECMD:
             {
                 auto ic = (IncludeCmd *)ast;
@@ -233,7 +250,9 @@ Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
             {
                 Stack s;
                 ConstCmd *c = (ConstCmd *)ast;
-                env.variables.insert(std::make_pair(c->ident, interpExpr(c->body, s, env)));
+                auto res = interpExpr(c->body, s, env);
+                Data d(res.getValue() + (long)env.offset, res.getType());
+                env.variables.insert(std::make_pair(c->ident, d));
                 break;
             }
             case ASTKind::INCLUDECMD:
@@ -283,6 +302,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 {
     for (auto exp : exps)
     {
+        //std::cout << stack.toString() << std::endl;
         //std::cout << exp->toString() << std::endl;
         switch (exp->getASTKind())
         {
@@ -341,6 +361,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 if (stack.peek().isTrue()) 
                 {
+                    stack.pop();
                     interpExpr(f->then, stack, env);
                     break;
                 }
@@ -594,6 +615,20 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
             {
                 stack.assertMinSize(1, exp->line);
                 stack.push(stack.peek());
+                break;
+            }
+
+            case ASTKind::OFFSETEXPR:
+            {
+                stack.assertMinSize(1, exp->line);
+                auto i = stack.pop();
+                env.offset += i.getValue();
+                break;
+            }
+
+            case ASTKind::RESETEXPR:
+            {
+                env.offset = 0;
                 break;
             }
 
