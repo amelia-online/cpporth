@@ -216,85 +216,167 @@ std::vector<Expr *> Parser::parseExpr()
                 break;
             }
             case TokenType::OFFSET:
-                subexps.push_back(new OffsetExpr());
+            {
+                auto e = new OffsetExpr();
+                e->line = t.line;
+                subexps.push_back(e);
                 break;
+            }
             case TokenType::RESET:
-                subexps.push_back(new ResetExpr());
+            {
+                auto e = new ResetExpr();
+                e->line = t.line;
+                subexps.push_back(e);
                 break;
+            }
             case TokenType::SWAP:
-                subexps.push_back(new SwapExpr());
+            {
+                auto e = new SwapExpr();
+                e->line = t.line;
+                subexps.push_back(e);
                 break;
+            }
             case TokenType::ADDROF:
-                subexps.push_back(new AddrOfExpr());
+            {
+                auto e = new AddrOfExpr();
+                e->line = t.line;
+                subexps.push_back(e);
                 break;
+            }
             case TokenType::ASSERT:
-                subexps.push_back(parseAssert());
+            {
+                auto e = parseAssert();
                 index--;
+                e->line = t.line;
+                subexps.push_back(e);
                 break;
+            }
             case TokenType::DROP:
-                subexps.push_back(new DropExpr());
+            {
+                auto e = new DropExpr();
+                e->line = t.line;
+                subexps.push_back(e);
                 break;
+            }
             case TokenType::DUP:
-                subexps.push_back(new DupExpr());
+            {
+                auto e = new DupExpr();
+                e->line = t.line;
+                subexps.push_back(e);
                 break;
+            }
             case TokenType::OVER:
-                subexps.push_back(new OverExpr());
+            {
+                auto e = new OverExpr();
+                e->line = t.line;
+                subexps.push_back(e);
                 break;
+            }
             case TokenType::ROT:
-                subexps.push_back(new RotExpr());
+            {
+                auto e = new RotExpr();
+                e->line = t.line;
+                subexps.push_back(e);
                 break;
+            }
             case TokenType::HERE:
-                subexps.push_back(new HereExpr());
+            {
+                auto e = new HereExpr();
+                e->line = t.line;
+                subexps.push_back(e);
                 break;
+            }
             case TokenType::MAX:
-                subexps.push_back(new MaxExpr());
+            {
+                auto e = new MaxExpr();
+                e->line = t.line;
+                subexps.push_back(e);
                 break;
+            }
             case TokenType::SYSCALLN:
             {
                 std::string n = "";
                 n.push_back(t.content[t.content.length()-1]);
-                subexps.push_back(new SyscallExpr(std::stoi(n)));
+                auto e = new SyscallExpr(std::stoi(n));
+                e->line = t.line;
+                subexps.push_back(e);
                 break;
             }
             case TokenType::PRINT:
-                subexps.push_back(new PrintExpr());
+            {
+                auto e = new PrintExpr();
+                e->line = t.line;
+                subexps.push_back(e);
                 break;
+            }
             case TokenType::MEMORY:
             {
                 MemoryCmd *m = parseMemory();
                 MemoryExpr *res = m->toMemoryExpr();
+                res->line = t.line;
                 subexps.push_back(res);
                 index--;
                 break;
             }
             case TokenType::CSTRING:
-                subexps.push_back(new StringLitExpr(t.content + "\\0"));
+            {
+                auto e = new StringLitExpr(t.content + "\\0");
+                e->line = t.line;
+                subexps.push_back(e);
                 break;
+            }
             case TokenType::STRING:
+            {
+                auto e = new StringLitExpr(t.content);
+                e->line = t.line;
                 subexps.push_back(new StringLitExpr(t.content));
                 break;
+            }
             case TokenType::WHILE:
-                subexps.push_back(parseWhile());
+            {
+                auto e = parseWhile();
+                e->line = t.line;
+                subexps.push_back(e);
                 index--;
                 break;
+            }
             case TokenType::IF:
-                subexps.push_back(parseIf());
+            {
+                auto e = parseIf();
+                e->line = t.line;
+                subexps.push_back(e);
                 index--;
-                //std::cout << peek().content << std::endl;
                 break;
+            }
             case TokenType::OP:
-                subexps.push_back(new OpExpr(t.content));
+            {
+                auto e = new OpExpr(t.content);
+                e->line = t.line;
+                subexps.push_back(e);
                 break;
+            }
             case TokenType::LET:
-                subexps.push_back(parseLet());
+            {
+                auto e = parseLet();
+                e->line = t.line;
+                subexps.push_back(e);
                 index--;
                 break;
+            }
             case TokenType::PEEK:
-                subexps.push_back(parsePeek());
+            {
+                auto e = parsePeek();
+                e->line = t.line;
+                subexps.push_back(e);
                 index--;
                 break;
+            }
             default:
-                subexps.push_back(new VarExpr(t.content));   
+            {
+                auto e = new VarExpr(t.content);
+                e->line = t.line;
+                subexps.push_back(e);   
+            }
         }
 
         index++;
@@ -400,27 +482,44 @@ std::vector<AST*> Parser::parse()
                 break;
 
             case TokenType::CONST:
-                asts.push_back(parseConst());
+            {
+                auto e = parseConst();
+                e->line = token.line;
+                asts.push_back(e);
                 break;
-            
+            }
+
             case TokenType::MEMORY:
-                asts.push_back(parseMemory());
+            {
+                auto e = parseMemory();
+                e->line = token.line;
+                asts.push_back(e);
                 break;
+            }
 
             case TokenType::INLINE:
                 index++;
             case TokenType::PROC:
-                asts.push_back(parseProc());
+            {
+                auto e = parseProc();
+                e->line = token.line;
+                asts.push_back(e);
                 break;
-
+            }
             case TokenType::ASSERT:
-                asts.push_back(parseAssert()->asCmd());
+            {
+                auto e = parseAssert()->asCmd();
+                e->line = token.line;
+                asts.push_back(e);
                 break;
-                
+            }   
             case TokenType::INCLUDE:
-                asts.push_back(parseInclude());
+            {
+                auto e = parseInclude();
+                e->line = token.line;
+                asts.push_back(e);
                 break;
-
+            }
             default:
                 std::cout << "Error:" << token.line << ": Not implemented: " << token.toString() << std::endl;
                 throw new std::exception();

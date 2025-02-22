@@ -13,7 +13,7 @@ public:
     Data(long, TypeKind);
     Data();
     TypeKind getType() const;
-    void assertType(TypeKind) const;
+    void assertType(TypeKind, int) const;
     long getValue() const;
     bool isTrue();
     bool isFalse();
@@ -40,7 +40,7 @@ public:
     void push(bool);
     void push(void *);
     void push(Data);
-    void assertMinSize(int);
+    void assertMinSize(int, int);
     void append(const Stack&);
     void clear();
     bool isEmpty();

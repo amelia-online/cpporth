@@ -68,7 +68,7 @@ class Lexer
    size_t index;
    int line;
    const std::string alphabet = "abcdefghjiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ/%+=1234567890-";
-   const std::string digits = "0123456789";
+   const std::string digits = "0123456789-";
    const std::string operators = "+-*!@=?><_";
 public:
     Lexer(std::string);

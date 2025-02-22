@@ -60,6 +60,8 @@ std::vector<Token> Lexer::lex()
             Token t;
             if (lexOperator(t))
                 tokens.push_back(t);
+            else if (ch == '-')
+                tokens.push_back(lexInt());
             else tokens.push_back(lexKeyword());
         }
         
@@ -309,7 +311,7 @@ Token Lexer::lexKeyword()
         tt = TokenType::MAX;
     else if (acc == "cast(int)" || acc == "cast(bool)" || acc == "cast(ptr)" 
         || acc == "and" || acc == "or" || acc == "not" || acc == "shr" || acc == "shl" 
-        || acc == "idivmod" || acc == "call-like")
+        || acc == "idivmod" || acc == "call-like" || acc == "divmod")
     {
         tt = TokenType::OP;
     }

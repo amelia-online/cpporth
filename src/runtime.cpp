@@ -43,11 +43,11 @@ bool Data::isFalse()
     return type == TypeKind::BOOL && value == 0;
 }
 
-void Data::assertType(TypeKind t) const
+void Data::assertType(TypeKind t, int line) const
 {
     if (type != t)
     {
-        std::cout << "Error: Type mismatch.\n";
+        std::cout << "Error:" << line << ": Type mismatch.\n";
         throw new std::exception();
     }
 }
@@ -95,11 +95,11 @@ bool Stack::isEmpty()
     return data.size() == 0;
 }
 
-void Stack::assertMinSize(int s)
+void Stack::assertMinSize(int s, int line)
 {
     if (data.size() < s)
     {
-        std::cout << "Error: operation requires at least " << s << " items\n";
+        std::cout << "Error:" << line << ": operation requires at least " << s << " items\n";
         throw new std::exception();
     }
 }
@@ -198,7 +198,7 @@ void include(std::string path, Env& env)
                 auto memcmd = (MemoryCmd *)ast;
                 Stack s;
                 env.variables.insert(std::make_pair(memcmd->ident, interpExpr(memcmd->body, s, env)));
-                env.variables[memcmd->ident].assertType(TypeKind::PTR);
+                env.variables[memcmd->ident].assertType(TypeKind::PTR, memcmd->line);
                 break;
             }
             case ASTKind::ASSERTCMD:
@@ -206,13 +206,13 @@ void include(std::string path, Env& env)
                 auto ac = (AssertCmd *)ast;
                 Stack s;
                 auto res = interpExpr(ac->body, s, env);
-                res.assertType(TypeKind::BOOL);
+                res.assertType(TypeKind::BOOL, ac->line);
                 if (res.isFalse())
                     std::cout << ac->msg << std::endl;
                 break;
             }
             default:
-                std::cout << "Error: not a command: " << ast->toString() << std::endl;
+                std::cout << "Error:" << ast->line << ": not a command: " << ast->toString() << std::endl;
                 throw new std::exception();
         }
     }
@@ -251,7 +251,7 @@ Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
                 auto memcmd = (MemoryCmd *)ast;
                 Stack s;
                 env.variables.insert(std::make_pair(memcmd->ident, interpExpr(memcmd->body, s, env)));
-                env.variables[memcmd->ident].assertType(TypeKind::PTR);
+                env.variables[memcmd->ident].assertType(TypeKind::PTR, memcmd->line);
                 break;
             }
             case ASTKind::ASSERTCMD:
@@ -259,13 +259,13 @@ Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
                 auto ac = (AssertCmd *)ast;
                 Stack s;
                 auto res = interpExpr(ac->body, s, env);
-                res.assertType(TypeKind::BOOL);
+                res.assertType(TypeKind::BOOL, ac->line);
                 if (res.isFalse())
                     std::cout << ac->msg << std::endl;
                 break;
             }
             default:
-                std::cout << "Error: not a command: " << ast->toString() << std::endl;
+                std::cout << "Error:" << ast->line << ": not a command: " << ast->toString() << std::endl;
                 throw new std::exception();
         }
     }
@@ -303,6 +303,11 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                 }
                 else if (env.variables.find(v->name) != env.variables.end())
                     stack.push(env.variables.at(v->name));
+                else
+                {
+                    std::cout << "Error:" << exp->line << ": Unknown identifier encountered: '" << v->name << "'\n";
+                    throw new std::exception();
+                }
                 break;
             }
 
@@ -321,7 +326,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
             case ASTKind::STRINGLITEXPR:
             {
                 StringLitExpr *s = (StringLitExpr *)exp;
-                auto str = s->getValue();
+                auto str = realString(s->getValue());
                 int len = str.length();
                 stack.push((long)len);
                 char *ptr = new char[len];
@@ -334,8 +339,11 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
             {
                 auto f = (IfExpr *)exp;
 
-                if (stack.peek().isTrue())
+                if (stack.peek().isTrue()) 
+                {
                     interpExpr(f->then, stack, env);
+                    break;
+                }
                 else if (f->elze.size() != 0)
                     interpExpr(f->elze, stack, env);
 
@@ -351,7 +359,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
             case ASTKind::LETSTMT:
             {
                 auto let = (LetExpr *)exp;
-                stack.assertMinSize(let->idents.size());
+                stack.assertMinSize(let->idents.size(), let->line);
                 for (int i = let->idents.size()-1; i >= 0; i--)
                     env.variables.insert(std::make_pair(let->idents[i], stack.pop()));
                 
@@ -371,41 +379,41 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                 
                 if (op->op == "+")
                 {
-                    stack.assertMinSize(2);
+                    stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
-                    rhs.assertType(TypeKind::INT);
-                    lhs.assertType(TypeKind::INT);
+                    rhs.assertType(TypeKind::INT, op->line);
+                    lhs.assertType(TypeKind::INT, op->line);
                     stack.push(lhs.getValue() + rhs.getValue());
                 }
 
                 else if (op->op == "-")
                 {
-                    stack.assertMinSize(2);
+                    stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
-                    rhs.assertType(TypeKind::INT);
-                    lhs.assertType(TypeKind::INT);
+                    rhs.assertType(TypeKind::INT, op->line);
+                    lhs.assertType(TypeKind::INT, op->line);
                     stack.push(lhs.getValue() - rhs.getValue());
                 }
 
                 else if (op->op == "*")
                 {
-                    stack.assertMinSize(2);
+                    stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
-                    rhs.assertType(TypeKind::INT);
-                    lhs.assertType(TypeKind::INT);
+                    rhs.assertType(TypeKind::INT, op->line);
+                    lhs.assertType(TypeKind::INT, op->line);
                     stack.push(lhs.getValue() * rhs.getValue());
                 }
 
                 else if (op->op == "divmod")
                 {
-                    stack.assertMinSize(2);
+                    stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
-                    rhs.assertType(TypeKind::INT);
-                    lhs.assertType(TypeKind::INT);
+                    rhs.assertType(TypeKind::INT, op->line);
+                    lhs.assertType(TypeKind::INT, op->line);
                     stack.push(lhs.getValue() / rhs.getValue());
                     stack.push(lhs.getValue() % rhs.getValue());
                 }
@@ -414,11 +422,11 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "<")
                 {
-                    stack.assertMinSize(2);
+                    stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
-                    rhs.assertType(TypeKind::INT);
-                    lhs.assertType(TypeKind::INT);
+                    rhs.assertType(TypeKind::INT, op->line);
+                    lhs.assertType(TypeKind::INT, op->line);
                     if (lhs.getValue() < rhs.getValue())
                         stack.push(true);
                     else
@@ -427,11 +435,11 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == ">")
                 {
-                    stack.assertMinSize(2);
+                    stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
-                    rhs.assertType(TypeKind::INT);
-                    lhs.assertType(TypeKind::INT);
+                    rhs.assertType(TypeKind::INT, op->line);
+                    lhs.assertType(TypeKind::INT, op->line);
                     if (lhs.getValue() > rhs.getValue())
                         stack.push(true);
                     else
@@ -440,11 +448,11 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "<=")
                 {
-                    stack.assertMinSize(2);
+                    stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
-                    rhs.assertType(TypeKind::INT);
-                    lhs.assertType(TypeKind::INT);
+                    rhs.assertType(TypeKind::INT, op->line);
+                    lhs.assertType(TypeKind::INT, op->line);
                     if (lhs.getValue() <= rhs.getValue())
                         stack.push(true);
                     else
@@ -453,11 +461,11 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == ">=")
                 {
-                    stack.assertMinSize(2);
+                    stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
-                    rhs.assertType(TypeKind::INT);
-                    lhs.assertType(TypeKind::INT);
+                    rhs.assertType(TypeKind::INT, op->line);
+                    lhs.assertType(TypeKind::INT, op->line);
                     if (lhs.getValue() >= rhs.getValue())
                         stack.push(true);
                     else
@@ -466,7 +474,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "=")
                 {
-                    stack.assertMinSize(2);
+                    stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
                     if (lhs.getValue() == rhs.getValue())
@@ -477,7 +485,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "!=")
                 {
-                    stack.assertMinSize(2);
+                    stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
                     if (lhs.getValue() != rhs.getValue())
@@ -490,53 +498,53 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "shr")
                 {
-                    stack.assertMinSize(2);
+                    stack.assertMinSize(2, op->line);
                     auto b = stack.pop();
                     auto a = stack.pop();
-                    b.assertType(TypeKind::INT);
-                    a.assertType(TypeKind::INT);
+                    b.assertType(TypeKind::INT, op->line);
+                    a.assertType(TypeKind::INT, op->line);
                     stack.push(a.getValue() >> b.getValue());
                     break;
                 }
 
                 else if (op->op == "shl")
                 {
-                    stack.assertMinSize(2);
+                    stack.assertMinSize(2, op->line);
                     auto b = stack.pop();
                     auto a = stack.pop();
-                    b.assertType(TypeKind::INT);
-                    a.assertType(TypeKind::INT);
+                    b.assertType(TypeKind::INT, op->line);
+                    a.assertType(TypeKind::INT, op->line);
                     stack.push(a.getValue() << b.getValue());
                     break;
                 }
 
                 else if (op->op == "or")
                 {
-                    stack.assertMinSize(2);
+                    stack.assertMinSize(2, op->line);
                     auto b = stack.pop();
                     auto a = stack.pop();
-                    b.assertType(TypeKind::INT);
-                    a.assertType(TypeKind::INT);
+                    b.assertType(TypeKind::INT, op->line);
+                    a.assertType(TypeKind::INT, op->line);
                     stack.push(a.getValue() | b.getValue());
                     break;
                 }
 
                 else if (op->op == "and")
                 {
-                    stack.assertMinSize(2);
+                    stack.assertMinSize(2, op->line);
                     auto b = stack.pop();
                     auto a = stack.pop();
-                    b.assertType(TypeKind::INT);
-                    a.assertType(TypeKind::INT);
+                    b.assertType(TypeKind::INT, op->line);
+                    a.assertType(TypeKind::INT, op->line);
                     stack.push(a.getValue() & b.getValue());
                     break;
                 }
 
                 else if (op->op == "not")
                 {
-                    stack.assertMinSize(1);
+                    stack.assertMinSize(1, op->line);
                     auto a = stack.pop();
-                    a.assertType(TypeKind::INT);
+                    a.assertType(TypeKind::INT, op->line);
                     stack.push(~a.getValue());
                     break;
                 }
@@ -549,7 +557,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "cast(bool)")
                 {
-                    stack.assertMinSize(1);
+                    stack.assertMinSize(1, op->line);
                     auto a = stack.pop();
                     if (a.getValue() > 0)
                         stack.push(true);
@@ -560,7 +568,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "cast(int)")
                 {
-                    stack.assertMinSize(1);
+                    stack.assertMinSize(1, op->line);
                     auto a = stack.pop();
                     stack.push(Data(a.getValue(), TypeKind::INT));
                     break;
@@ -568,7 +576,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "cast(ptr)")
                 {
-                    stack.assertMinSize(1);
+                    stack.assertMinSize(1, op->line);
                     auto a = stack.pop();
                     stack.push(Data(a.getValue(), TypeKind::PTR));
                     break;
@@ -578,38 +586,38 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
             }
 
             case ASTKind::PRINTEXPR:
-                stack.assertMinSize(1);
+                stack.assertMinSize(1, exp->line);
                 std::cout << stack.pop().getValue() << std::endl;
                 break;
 
             case ASTKind::DUPEXPR:
             {
-                stack.assertMinSize(1);
+                stack.assertMinSize(1, exp->line);
                 stack.push(stack.peek());
                 break;
             }
 
             case ASTKind::MAXEXPR:
             {
-                stack.assertMinSize(2);
+                stack.assertMinSize(2, exp->line);
                 auto rhs = stack.pop();
                 auto lhs = stack.pop();
-                rhs.assertType(TypeKind::INT);
-                lhs.assertType(TypeKind::INT);
+                rhs.assertType(TypeKind::INT, exp->line);
+                lhs.assertType(TypeKind::INT, exp->line);
                 stack.push(std::max(lhs.getValue(), rhs.getValue()));
                 break;
             }
 
             case ASTKind::DROPEXPR:
             {
-                stack.assertMinSize(1);
+                stack.assertMinSize(1, exp->line);
                 stack.pop();
                 break;
             }
 
             case ASTKind::SWAPEXPR:
             {
-                stack.assertMinSize(1);
+                stack.assertMinSize(1, exp->line);
                 auto rhs = stack.pop();
                 auto lhs = stack.pop();
                 stack.push(rhs);
@@ -619,7 +627,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
             case ASTKind::ROTEXPR:
             {
-                stack.assertMinSize(3);
+                stack.assertMinSize(3, exp->line);
                 auto c = stack.pop();
                 auto b = stack.pop();
                 auto a = stack.pop();
@@ -631,7 +639,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
             case ASTKind::OVEREXPR:
             {
-                stack.assertMinSize(2);
+                stack.assertMinSize(2, exp->line);
                 auto b = stack.pop();
                 auto a = stack.pop();
                 stack.push(a);
@@ -641,7 +649,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
             }
 
             default:
-                std::cout << "Not implemented: " << ((int)exp->getASTKind()) << std::endl;
+                std::cout << "Not implemented:" << exp->line <<  ": " << ((int)exp->getASTKind()) << std::endl;
         }
     }
 
