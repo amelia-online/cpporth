@@ -28,7 +28,11 @@ public:
     std::unordered_map<std::string, Data> variables;
     std::unordered_map<std::string, ProcCmd*> procs;
     int offset = 0;
+    std::string filepath;
     Env(int, char**);
+    Env(const Env&);
+    Env& operator=(Env);
+    Env& operator+=(Env);
 };
 
 
@@ -53,8 +57,6 @@ public:
     std::string toString();
 };
 
-long load(int, void *);
-void store(int, long, void *);
 std::vector<AST*> toAstVec(std::vector<Expr*>);
 Data interp(std::vector<AST*>, Stack&, Env&);
 Data interpExpr(std::vector<Expr*>, Stack&, Env&);

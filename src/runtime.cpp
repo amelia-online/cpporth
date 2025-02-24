@@ -8,17 +8,34 @@
 Env::Env(int argc, char** argv)
 {
     variables.insert(std::make_pair("argc", Data(argc, TypeKind::INT)));
-    // todo: argv
-
-    char **args = new char*[argc];
-
-    for (int i = 0; i < argc; i++) {
-        args[i] = new char[std::string(argv[i]).length()+1];
-        std::strcpy(args[i], argv[i]);
-    }
 
     variables.insert(std::make_pair("argv", Data((long)argv, TypeKind::PTR)));
+    filepath = argv[1];
+    
+}
 
+Env::Env(const Env& other)
+{
+    variables = std::unordered_map<std::string, Data>(other.variables);
+    procs = std::unordered_map<std::string, ProcCmd*>(other.procs);
+    offset = other.offset;
+    filepath = other.filepath;
+}
+
+Env& Env::operator=(Env other)
+{
+    std::swap(variables, other.variables);
+    std::swap(procs, other.procs);
+    std::swap(offset, other.offset);
+    std::swap(filepath, other.filepath);
+    return *this;
+}
+
+Env& Env::operator+=(Env other)
+{
+    std::swap(variables, other.variables);
+    std::swap(procs, other.procs);
+    return *this;
 }
 
 Data::Data() : value(-1), type(TypeKind::ADDR), isNone_(true) {;}
@@ -218,7 +235,10 @@ void include(std::string path, Env& env)
             case ASTKind::INCLUDECMD:
             {
                 auto ic = (IncludeCmd *)ast;
-                include(realString(ic->path), env);
+                Env e2(env);
+                e2.filepath = realString(ic->path);
+                include(realString(ic->path), e2);
+                env += e2;
                 break;
             }
 
@@ -248,12 +268,6 @@ void include(std::string path, Env& env)
     }
 }
 
-long load(int nbits, void *ptr)
-{
-    long res = 0;
-    
-}
-
 // interp
 
 Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
@@ -278,7 +292,10 @@ Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
             case ASTKind::INCLUDECMD:
             {
                 auto ic = (IncludeCmd *)ast;
-                include(realString(ic->path), env);
+                Env e2(env);
+                e2.filepath = realString(ic->path);
+                include(realString(ic->path), e2);
+                env += e2;
                 break;
             }
             case ASTKind::MEMORYCMD:
@@ -414,6 +431,22 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
             case ASTKind::LETSTMT:
             {
+                auto let = (LetExpr *)exp;
+                stack.assertMinSize(let->idents.size(), let->line);
+                for (int i = let->idents.size()-1; i >= 0; i--)
+                    env.variables.insert(std::make_pair(let->idents[i], stack.pop()));
+                
+                interpExpr(let->body, stack, env);
+
+                for (auto ident : let->idents)
+                    env.variables.erase(ident);
+
+                break;
+            }
+
+            case ASTKind::PEEKSTMT:
+            {
+                // TODO: change to not modify stack.
                 auto let = (LetExpr *)exp;
                 stack.assertMinSize(let->idents.size(), let->line);
                 for (int i = let->idents.size()-1; i >= 0; i--)
@@ -607,7 +640,90 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 // MEMOPS
 
-                // todo
+                else if (op->op == "!8")
+                {
+                    stack.assertMinSize(2, op->line);
+                    auto ptr = stack.pop();
+                    auto byte = stack.pop();
+                    ptr.assertType(TypeKind::PTR, op->line);
+                    byte.assertType(TypeKind::INT, op->line);
+                    *((char *)ptr.getValue()) = byte.getValue() & 0xFF;
+                    break;
+                }
+
+                else if (op->op == "@8")
+                {
+                    stack.assertMinSize(1, op->line);
+                    auto ptr = stack.pop();
+                    ptr.assertType(TypeKind::PTR, op->line);
+                    long byte = (long)*((char *)ptr.getValue());
+                    stack.push(byte);
+                    break;
+                }
+
+                else if (op->op == "!16")
+                {
+                    stack.assertMinSize(2, op->line);
+                    auto ptr = stack.pop();
+                    auto byte = stack.pop();
+                    ptr.assertType(TypeKind::PTR, op->line);
+                    byte.assertType(TypeKind::INT, op->line);
+                    *((short *)ptr.getValue()) = byte.getValue() & 0xFF;
+                    break;
+                }
+
+                else if (op->op == "@16")
+                {
+                    stack.assertMinSize(1, op->line);
+                    auto ptr = stack.pop();
+                    ptr.assertType(TypeKind::PTR, op->line);
+                    long byte = (long)*((short *)ptr.getValue());
+                    stack.push(byte);
+                    break;
+                }
+
+
+                else if (op->op == "!32")
+                {
+                    stack.assertMinSize(2, op->line);
+                    auto ptr = stack.pop();
+                    auto byte = stack.pop();
+                    ptr.assertType(TypeKind::PTR, op->line);
+                    byte.assertType(TypeKind::INT, op->line);
+                    *((int *)ptr.getValue()) = byte.getValue() & 0xFF;
+                    break;
+                }
+
+                else if (op->op == "@32")
+                {
+                    stack.assertMinSize(1, op->line);
+                    auto ptr = stack.pop();
+                    ptr.assertType(TypeKind::PTR, op->line);
+                    long byte = (long)*((int *)ptr.getValue());
+                    stack.push(byte);
+                    break;
+                }
+
+                else if (op->op == "!64")
+                {
+                    stack.assertMinSize(2, op->line);
+                    auto ptr = stack.pop();
+                    auto byte = stack.pop();
+                    ptr.assertType(TypeKind::PTR, op->line);
+                    byte.assertType(TypeKind::INT, op->line);
+                    *((long *)ptr.getValue()) = byte.getValue() & 0xFF;
+                    break;
+                }
+
+                else if (op->op == "@64")
+                {
+                    stack.assertMinSize(1, op->line);
+                    auto ptr = stack.pop();
+                    ptr.assertType(TypeKind::PTR, op->line);
+                    long byte = (long)*((long *)ptr.getValue());
+                    stack.push(byte);
+                    break;
+                }
 
                 // CAST
 
@@ -655,7 +771,13 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
             case ASTKind::HEREEXPR:
             {
-                // todo
+                std::string s = env.filepath;
+                s += ":";
+                s += std::to_string(exp->line);
+                char* here = new char[s.length()];
+                std::strncpy(here, s.data(), s.length());
+                stack.push((long)s.length());
+                stack.push(here);
                 break;
             }
 
