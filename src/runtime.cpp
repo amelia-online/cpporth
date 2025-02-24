@@ -9,6 +9,16 @@ Env::Env(int argc, char** argv)
 {
     variables.insert(std::make_pair("argc", Data(argc, TypeKind::INT)));
     // todo: argv
+
+    char **args = new char*[argc];
+
+    for (int i = 0; i < argc; i++) {
+        args[i] = new char[std::string(argv[i]).length()+1];
+        std::strcpy(args[i], argv[i]);
+    }
+
+    variables.insert(std::make_pair("argv", Data((long)argv, TypeKind::PTR)));
+
 }
 
 Data::Data() : value(-1), type(TypeKind::ADDR), isNone_(true) {;}
@@ -198,8 +208,9 @@ void include(std::string path, Env& env)
             {
                 Stack s;
                 ConstCmd *c = (ConstCmd *)ast;
+                long offs = (long)env.offset;
                 auto res = interpExpr(c->body, s, env);
-                Data d(res.getValue() + (long)env.offset, res.getType());
+                Data d(res.getValue() + offs, res.getType());
                 env.variables.insert(std::make_pair(c->ident, d));
                 break;
             }
@@ -215,8 +226,9 @@ void include(std::string path, Env& env)
             {
                 auto memcmd = (MemoryCmd *)ast;
                 Stack s;
-                env.variables.insert(std::make_pair(memcmd->ident, interpExpr(memcmd->body, s, env)));
-                env.variables[memcmd->ident].assertType(TypeKind::PTR, memcmd->line);
+                long size = interpExpr(memcmd->body, s, env).getValue();
+                unsigned char *m = new unsigned char[size]();
+                env.variables.insert(std::make_pair(memcmd->ident, Data((long)m, TypeKind::PTR)));
                 break;
             }
             case ASTKind::ASSERTCMD:
@@ -236,6 +248,12 @@ void include(std::string path, Env& env)
     }
 }
 
+long load(int nbits, void *ptr)
+{
+    long res = 0;
+    
+}
+
 // interp
 
 Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
@@ -247,12 +265,13 @@ Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
             case ASTKind::PROCCMD:
                 env.procs.insert(std::make_pair(((ProcCmd *)ast)->name, (ProcCmd *)ast));
                 break;
-            case ASTKind::CONSTCMD:
+            case ASTKind::CONSTCMD: // fix offset stuff
             {
                 Stack s;
                 ConstCmd *c = (ConstCmd *)ast;
+                long offs = (long)env.offset;
                 auto res = interpExpr(c->body, s, env);
-                Data d(res.getValue() + (long)env.offset, res.getType());
+                Data d((!res.isNone() ? res.getValue() : 0) + offs, res.getType());
                 env.variables.insert(std::make_pair(c->ident, d));
                 break;
             }
@@ -260,18 +279,16 @@ Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
             {
                 auto ic = (IncludeCmd *)ast;
                 include(realString(ic->path), env);
-
-                for (auto [key, val] : env.variables)
-                    std::cout << "Included: " << key << " : " << val.getValue() << std::endl;
-
                 break;
             }
             case ASTKind::MEMORYCMD:
             {
                 auto memcmd = (MemoryCmd *)ast;
                 Stack s;
-                env.variables.insert(std::make_pair(memcmd->ident, interpExpr(memcmd->body, s, env)));
-                env.variables[memcmd->ident].assertType(TypeKind::PTR, memcmd->line);
+                long size = interpExpr(memcmd->body, s, env).getValue();
+               //\ std::cout << size << ast->line <<  std::endl;
+                unsigned char *m = new unsigned char[size]();
+                env.variables.insert(std::make_pair(memcmd->ident, Data((long)m, TypeKind::PTR)));
                 break;
             }
             case ASTKind::ASSERTCMD:
@@ -303,7 +320,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 {
     for (auto exp : exps)
     {
-        //std::cout << stack.toString() << std::endl;
+        //std::cout << stack.toString() << " " << exp->toString() << std::endl;
 
         switch (exp->getASTKind())
         {
@@ -377,9 +394,9 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
             {
                 auto f = (IfExpr *)exp;
 
-                if (stack.peek().isTrue()) 
+                if (stack.pop().isTrue()) 
                 {
-                    stack.pop();
+                    //stack.pop();
                     interpExpr(f->then, stack, env);
                     break;
                 }

@@ -53,6 +53,8 @@ public:
     std::string toString();
 };
 
+long load(int, void *);
+void store(int, long, void *);
 std::vector<AST*> toAstVec(std::vector<Expr*>);
 Data interp(std::vector<AST*>, Stack&, Env&);
 Data interpExpr(std::vector<Expr*>, Stack&, Env&);
