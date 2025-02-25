@@ -4,6 +4,7 @@
 #include "parser.h"
 #include "syscalls.h"
 #include <iostream>
+#include <algorithm>
 
 Env::Env(int argc, char** argv)
 {
@@ -18,6 +19,7 @@ Env::Env(const Env& other)
 {
     variables = std::unordered_map<std::string, Data>(other.variables);
     procs = std::unordered_map<std::string, ProcCmd*>(other.procs);
+    included = std::vector<std::string>(other.included);
     offset = other.offset;
     filepath = other.filepath;
 }
@@ -41,6 +43,7 @@ Env& Env::operator+=(Env other)
 {
     std::swap(variables, other.variables);
     std::swap(procs, other.procs);
+    std::swap(included, other.included);
     return *this;
 }
 
@@ -241,6 +244,12 @@ void include(std::string path, Env& env)
             case ASTKind::INCLUDECMD:
             {
                 auto ic = (IncludeCmd *)ast;
+
+                if (std::find(env.included.begin(), env.included.end(), realString(ic->path)) == env.included.end())
+                    env.included.push_back(realString(ic->path));
+                else
+                    break;
+
                 Env e2(env);
                 e2.filepath = realString(ic->path);
                 include(realString(ic->path), e2);
@@ -298,6 +307,13 @@ Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
             case ASTKind::INCLUDECMD:
             {
                 auto ic = (IncludeCmd *)ast;
+
+                if (std::find(env.included.begin(), env.included.end(), realString(ic->path)) == env.included.end())
+                    env.included.push_back(realString(ic->path));
+                else
+                    break;
+
+
                 Env e2(env);
                 e2.filepath = realString(ic->path);
                 include(realString(ic->path), e2);

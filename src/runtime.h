@@ -28,6 +28,7 @@ public:
     std::unordered_map<std::string, Data> variables;
     std::unordered_map<std::string, ProcCmd*> procs;
     std::vector<unsigned char *> toClean;
+    std::vector<std::string> included;
     int offset = 0;
     std::string filepath;
     Env(int, char**);
