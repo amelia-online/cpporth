@@ -159,8 +159,8 @@ public:
 class MemoryExpr : public Expr
 {
     std::string ident;
-    std::vector<Expr*> body;
 public:
+    std::vector<Expr*> body;
     MemoryExpr(std::string, std::vector<Expr*>);
     MemoryExpr(MemoryExpr *);
     ~MemoryExpr();

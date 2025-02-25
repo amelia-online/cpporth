@@ -22,6 +22,12 @@ Env::Env(const Env& other)
     filepath = other.filepath;
 }
 
+Env::~Env()
+{
+    for (auto a : toClean)
+        delete[] a;
+}
+
 Env& Env::operator=(Env other)
 {
     std::swap(variables, other.variables);
@@ -354,7 +360,8 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                 
                 if (env.procs.find(v->name) != env.procs.end())
                 {
-                    interpExpr(env.procs.at(v->name)->body, stack, env);
+                    Env e2(env);
+                    interpExpr(env.procs.at(v->name)->body, stack, e2);
                 }
                 else if (env.variables.find(v->name) != env.variables.end())
                     stack.push(env.variables.at(v->name));
@@ -390,6 +397,13 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                 break;
             }
 
+            case ASTKind::CHAREXPR:
+            {
+                auto e = (CharExpr *)exp;
+                stack.push((long)e->getValue());
+                break;
+            }
+
             case ASTKind::SYSCALLEXPR:
             {
                 auto e = (SyscallExpr *)exp;
@@ -404,6 +418,18 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                     args.push_back(stack.pop().getValue());
                 
                 stack.push(syscall(sysnum, args));
+                break;
+            }
+
+            case ASTKind::MEMORYEXPR:
+            {
+                auto ex = (MemoryExpr *)exp;
+                Stack sta;
+                auto s = interpExpr(ex->body, sta, env);                
+                auto ptr = new unsigned char[s.getValue()];
+                //std::cout << ex->getIdent() << std::endl;
+                env.variables.insert(std::make_pair(ex->getIdent(), Data((long)ptr, TypeKind::PTR)));
+                env.toClean.push_back(ptr);
                 break;
             }
 
@@ -647,7 +673,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                     auto byte = stack.pop();
                     ptr.assertType(TypeKind::PTR, op->line);
                     byte.assertType(TypeKind::INT, op->line);
-                    *((char *)ptr.getValue()) = byte.getValue() & 0xFF;
+                    *((unsigned char *)ptr.getValue()) = byte.getValue() & 0xFF;
                     break;
                 }
 
@@ -656,7 +682,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                     stack.assertMinSize(1, op->line);
                     auto ptr = stack.pop();
                     ptr.assertType(TypeKind::PTR, op->line);
-                    long byte = (long)*((char *)ptr.getValue());
+                    long byte = (long)*((unsigned char *)ptr.getValue());
                     stack.push(byte);
                     break;
                 }
@@ -668,7 +694,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                     auto byte = stack.pop();
                     ptr.assertType(TypeKind::PTR, op->line);
                     byte.assertType(TypeKind::INT, op->line);
-                    *((short *)ptr.getValue()) = byte.getValue() & 0xFF;
+                    *((unsigned short *)ptr.getValue()) = byte.getValue() & 0xFF;
                     break;
                 }
 
@@ -677,7 +703,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                     stack.assertMinSize(1, op->line);
                     auto ptr = stack.pop();
                     ptr.assertType(TypeKind::PTR, op->line);
-                    long byte = (long)*((short *)ptr.getValue());
+                    long byte = (long)*((unsigned short *)ptr.getValue());
                     stack.push(byte);
                     break;
                 }
@@ -690,7 +716,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                     auto byte = stack.pop();
                     ptr.assertType(TypeKind::PTR, op->line);
                     byte.assertType(TypeKind::INT, op->line);
-                    *((int *)ptr.getValue()) = byte.getValue() & 0xFF;
+                    *((unsigned int *)ptr.getValue()) = byte.getValue() & 0xFF;
                     break;
                 }
 
@@ -699,7 +725,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                     stack.assertMinSize(1, op->line);
                     auto ptr = stack.pop();
                     ptr.assertType(TypeKind::PTR, op->line);
-                    long byte = (long)*((int *)ptr.getValue());
+                    long byte = (long)*((unsigned int *)ptr.getValue());
                     stack.push(byte);
                     break;
                 }
@@ -711,7 +737,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                     auto byte = stack.pop();
                     ptr.assertType(TypeKind::PTR, op->line);
                     byte.assertType(TypeKind::INT, op->line);
-                    *((long *)ptr.getValue()) = byte.getValue() & 0xFF;
+                    *((unsigned long *)ptr.getValue()) = byte.getValue() & 0xFF;
                     break;
                 }
 
@@ -720,7 +746,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                     stack.assertMinSize(1, op->line);
                     auto ptr = stack.pop();
                     ptr.assertType(TypeKind::PTR, op->line);
-                    long byte = (long)*((long *)ptr.getValue());
+                    long byte = (long)*((unsigned long *)ptr.getValue());
                     stack.push(byte);
                     break;
                 }
@@ -848,6 +874,8 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
             default:
                 std::cout << "Not implemented:" << exp->line <<  ": " << ((int)exp->getASTKind()) << std::endl;
+                exit(1);
+                break;
         }
     }
 

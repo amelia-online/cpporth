@@ -189,6 +189,10 @@ std::string CharExpr::toString()
     return "(CharExpr " + std::to_string(ch) + ")";
 }
 
+char CharExpr::getValue()
+{
+    return ch;
+}
 
 ASTKind CharExpr::getASTKind()
 {

@@ -27,10 +27,12 @@ class Env
 public:
     std::unordered_map<std::string, Data> variables;
     std::unordered_map<std::string, ProcCmd*> procs;
+    std::vector<unsigned char *> toClean;
     int offset = 0;
     std::string filepath;
     Env(int, char**);
     Env(const Env&);
+    ~Env();
     Env& operator=(Env);
     Env& operator+=(Env);
 };

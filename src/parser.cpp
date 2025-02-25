@@ -215,6 +215,11 @@ std::vector<Expr *> Parser::parseExpr()
                 subexps.push_back(new IntExpr((long)std::stol(t.content)));
                 break;
             }
+            case TokenType::CHAR:
+            {
+                subexps.push_back(new CharExpr(t.content[1]));
+                break;
+            }
             case TokenType::OFFSET:
             {
                 auto e = new OffsetExpr();

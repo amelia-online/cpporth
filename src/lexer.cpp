@@ -68,8 +68,9 @@ std::vector<Token> Lexer::lex()
         else if (ch == '"')
             tokens.push_back(lexString());
 
-        else if (ch == '\'')
+        else if (ch == '\'') {
             tokens.push_back(lexChar());
+        }
 
         else if (digits.find(ch) != std::string::npos)
         {
