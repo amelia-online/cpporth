@@ -131,7 +131,7 @@ std::string PeekExpr::toString()
 }
 ASTKind PeekExpr::getASTKind()
 {
-    return ASTKind::LETSTMT;
+    return ASTKind::PEEKSTMT;
 }
 
 OpExpr::OpExpr(std::string op) : op(op) {;}

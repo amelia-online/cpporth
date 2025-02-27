@@ -74,3 +74,20 @@ std::string realString(std::string rep)
 
     return res;
 }
+
+char realChar(std::string s)
+{
+    if (s == "'\\n'")
+        return '\n';
+    if (s == "'\\r'")
+        return '\r';
+    if (s == "'\\0'")
+        return '\0';
+    if (s == "'\\\\'")
+        return '\\';
+    if (s == "\\\"")
+        return '\"';
+    if (s == "'\\''")
+        return '\'';
+    return s[1];
+}

@@ -294,7 +294,7 @@ Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
             case ASTKind::PROCCMD:
                 env.procs.insert(std::make_pair(((ProcCmd *)ast)->name, (ProcCmd *)ast));
                 break;
-            case ASTKind::CONSTCMD: // fix offset stuff
+            case ASTKind::CONSTCMD:
             {
                 Stack s;
                 ConstCmd *c = (ConstCmd *)ast;
@@ -325,7 +325,6 @@ Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
                 auto memcmd = (MemoryCmd *)ast;
                 Stack s;
                 long size = interpExpr(memcmd->body, s, env).getValue();
-               //\ std::cout << size << ast->line <<  std::endl;
                 unsigned char *m = new unsigned char[size]();
                 env.variables.insert(std::make_pair(memcmd->ident, Data((long)m, TypeKind::PTR)));
                 break;
@@ -341,7 +340,7 @@ Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
                 break;
             }
             default:
-                std::cout << "Error:" << ast->line << ": not a command: " << ast->toString() << std::endl;
+                std::cout << "Error:" << ast->line << ": " << ast->line << ": not a command: " << ast->toString() << std::endl;
                 throw new std::exception();
         }
     }
@@ -392,11 +391,22 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
             case ASTKind::WHILEEXPR:
             {
                 WhileExpr *w = (WhileExpr *)exp;
-                while (interpExpr(w->cond, stack, env).isTrue()) 
+                
+                while (1) 
                 {
-                    stack.pop();
-                    interpExpr(w->body, stack, env);
+                    interpExpr(w->cond, stack, env);
+                    auto r = stack.pop();
+                    if (r.isTrue())
+                        interpExpr(w->body, stack, env);
+                    else if (r.isFalse())
+                        break;
+                    else
+                    {
+                        std::cout << "Error:" << exp->line << ": Expected bool, got " << Type(r.getType()).toString() << std::endl;
+                        throw new std::exception();
+                    }
                 }
+                
 
                 break;
             }
@@ -413,7 +423,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                 break;
             }
 
-            case ASTKind::CHAREXPR:
+            case ASTKind::CHAREXPR: // broken
             {
                 auto e = (CharExpr *)exp;
                 stack.push((long)e->getValue());
@@ -443,7 +453,6 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                 Stack sta;
                 auto s = interpExpr(ex->body, sta, env);                
                 auto ptr = new unsigned char[s.getValue()];
-                //std::cout << ex->getIdent() << std::endl;
                 env.variables.insert(std::make_pair(ex->getIdent(), Data((long)ptr, TypeKind::PTR)));
                 env.toClean.push_back(ptr);
                 break;
@@ -455,7 +464,6 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 if (stack.pop().isTrue()) 
                 {
-                    //stack.pop();
                     interpExpr(f->then, stack, env);
                     break;
                 }
@@ -488,15 +496,18 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
             case ASTKind::PEEKSTMT:
             {
-                // TODO: change to not modify stack.
-                auto let = (LetExpr *)exp;
-                stack.assertMinSize(let->idents.size(), let->line);
-                for (int i = let->idents.size()-1; i >= 0; i--)
-                    env.variables.insert(std::make_pair(let->idents[i], stack.pop()));
+                auto peek = (PeekExpr *)exp;
+                stack.assertMinSize(peek->idents.size(), peek->line);
+                auto data = stack.toVector();
+                int size = data.size();
+                for (int i = 0; i < peek->idents.size(); i++)
+                    env.variables.insert(
+                        std::make_pair(peek->idents[i], data[size-(peek->idents.size()-i)])
+                    );
                 
-                interpExpr(let->body, stack, env);
+                interpExpr(peek->body, stack, env);
 
-                for (auto ident : let->idents)
+                for (auto ident : peek->idents)
                     env.variables.erase(ident);
 
                 break;

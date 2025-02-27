@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "helper.h"
 
 void todo()
 {
@@ -217,7 +218,7 @@ std::vector<Expr *> Parser::parseExpr()
             }
             case TokenType::CHAR:
             {
-                subexps.push_back(new CharExpr(t.content[1]));
+                subexps.push_back(new CharExpr(realChar(t.content)));
                 break;
             }
             case TokenType::OFFSET:
@@ -325,7 +326,8 @@ std::vector<Expr *> Parser::parseExpr()
             }
             case TokenType::CSTRING:
             {
-                auto e = new StringLitExpr(t.content + "\\0");
+                t.content.pop_back();
+                auto e = new StringLitExpr("\"" + realString(t.content) + "\\0\"");
                 e->line = t.line;
                 subexps.push_back(e);
                 break;
