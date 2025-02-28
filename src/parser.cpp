@@ -327,16 +327,16 @@ std::vector<Expr *> Parser::parseExpr()
             case TokenType::CSTRING:
             {
                 t.content.pop_back();
-                auto e = new StringLitExpr("\"" + realString(t.content) + "\\0\"");
+                auto e = new StringLitExpr("\"" + realString(t.content) + "\\0\"", true);
                 e->line = t.line;
                 subexps.push_back(e);
                 break;
             }
             case TokenType::STRING:
             {
-                auto e = new StringLitExpr(t.content);
+                auto e = new StringLitExpr(t.content, false);
                 e->line = t.line;
-                subexps.push_back(new StringLitExpr(t.content));
+                subexps.push_back(e);
                 break;
             }
             case TokenType::WHILE:

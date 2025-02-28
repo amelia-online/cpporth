@@ -200,7 +200,7 @@ ASTKind CharExpr::getASTKind()
 }
 
 
-StringLitExpr::StringLitExpr(std::string val) : value(val) {;}
+StringLitExpr::StringLitExpr(std::string val, bool cstr) : value(val), cstr(cstr) {;}
 std::string StringLitExpr::toString()
 {
     return "(StringLitExpr " + value + ")";
@@ -208,6 +208,11 @@ std::string StringLitExpr::toString()
 std::string StringLitExpr::getValue()
 {
     return value;
+}
+
+bool StringLitExpr::isCStr() const
+{
+    return cstr;
 }
 
 

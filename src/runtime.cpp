@@ -416,7 +416,8 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                 StringLitExpr *s = (StringLitExpr *)exp;
                 auto str = realString(s->getValue());
                 int len = str.length();
-                stack.push((long)len);
+                if (!s->isCStr())
+                    stack.push((long)len);
                 char *ptr = new char[len];
                 std::strncpy(ptr, str.data(), len);
                 stack.push(ptr);

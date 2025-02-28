@@ -126,11 +126,12 @@ public:
 class StringLitExpr : public Expr
 {
     std::string value;
+    bool cstr;
 public:
-    StringLitExpr(std::string);
+    StringLitExpr(std::string, bool);
     std::string getValue();
     std::string toString() override;
-    
+    bool isCStr() const;
     ASTKind getASTKind() override;
 };
 

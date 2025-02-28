@@ -63,6 +63,5 @@ public:
 std::vector<AST*> toAstVec(std::vector<Expr*>);
 Data interp(std::vector<AST*>, Stack&, Env&);
 Data interpExpr(std::vector<Expr*>, Stack&, Env&);
-void typecheck(std::vector<AST*>);
 void include(std::string, Env&);
 #endif // CPPORTH_RUNTIME_H
