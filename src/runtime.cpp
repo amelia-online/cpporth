@@ -722,7 +722,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                     auto byte = stack.pop();
                     ptr.assertType(TypeKind::PTR, op->line);
                     byte.assertType(TypeKind::INT, op->line);
-                    *((unsigned short *)ptr.getValue()) = byte.getValue() & 0xFF;
+                    *((unsigned short *)ptr.getValue()) = byte.getValue() & 0xFFFF;
                     break;
                 }
 
@@ -744,7 +744,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                     auto byte = stack.pop();
                     ptr.assertType(TypeKind::PTR, op->line);
                     byte.assertType(TypeKind::INT, op->line);
-                    *((unsigned int *)ptr.getValue()) = byte.getValue() & 0xFF;
+                    *((unsigned int *)ptr.getValue()) = byte.getValue() & 0xFFFFFFFF;
                     break;
                 }
 
@@ -765,7 +765,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                     auto byte = stack.pop();
                     ptr.assertType(TypeKind::PTR, op->line);
                     byte.assertType(TypeKind::INT, op->line);
-                    *((unsigned long *)ptr.getValue()) = byte.getValue() & 0xFF;
+                    *((unsigned long *)ptr.getValue()) = byte.getValue();
                     break;
                 }
 
