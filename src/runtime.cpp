@@ -236,7 +236,7 @@ void include(std::string path, Env& env)
                 ConstCmd *c = (ConstCmd *)ast;
                 long offs = (long)env.offset;
                 auto res = interpExpr(c->body, s, env);
-                Data d(res.getValue() + offs, res.getType());
+                Data d((!res.isNone() ? res.getValue() : 0) + offs, res.getType());
                 env.variables.insert(std::make_pair(c->ident, d));
                 break;
             }
