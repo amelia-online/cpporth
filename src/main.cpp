@@ -4,6 +4,7 @@
 #include "helper.h"
 #include "parser.h"
 #include "runtime.h"
+#include "typechecker.h"
 
 int main(int argc, char **argv)
 {
@@ -31,6 +32,10 @@ int main(int argc, char **argv)
         args[i] = new char[std::strlen(argv[i])+1];
         std::strncpy(args[i], argv[i], std::strlen(argv[i])+1);
     }
+
+    // TypeEnv tenv;
+    // TypeStack tstack;
+    // typecheck(asts, tstack, tenv);
     
     Stack s;
     Env e(argc, args);

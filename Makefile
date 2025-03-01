@@ -1,5 +1,5 @@
 CC = g++
-FLAGS = -g -fsanitize=address -fsanitize=undefined -std=c++20
+FLAGS = -g -fsanitize=address -std=c++20
 TEST=src/test.txt
 OBJS=lexer.o main.o parser.o ast.o runtime.o helper.o syscalls.o
 
@@ -34,3 +34,6 @@ main.o: src/main.cpp
 
 lexer.o: src/lexer.h src/lexer.cpp
 	$(CC) $(FLAGS) -c src/lexer.cpp
+
+typechecker.o: src/typechecker.cpp src/typechecker.h
+	$(CC) $(FLAGS) -c src/typechecker.cpp

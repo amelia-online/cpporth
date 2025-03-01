@@ -271,9 +271,11 @@ void include(std::string path, Env& env)
                 auto ac = (AssertCmd *)ast;
                 Stack s;
                 auto res = interpExpr(ac->body, s, env);
-                res.assertType(TypeKind::BOOL, ac->line);
-                if (res.isFalse())
-                    std::cout << ac->msg << std::endl;
+                //res.assertType(TypeKind::BOOL, ac->line);
+                if (res.isFalse()) {
+                    std::cout << env.filepath << ":" << ac->line << ": AssertionError: " << realString(ac->msg) << std::endl;
+                    throw new std::exception();
+                }
                 break;
             }
             default:
@@ -334,9 +336,11 @@ Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
                 auto ac = (AssertCmd *)ast;
                 Stack s;
                 auto res = interpExpr(ac->body, s, env);
-                res.assertType(TypeKind::BOOL, ac->line);
-                if (res.isFalse())
-                    std::cout << ac->msg << std::endl;
+                //res.assertType(TypeKind::BOOL, ac->line);
+                if (res.isFalse()) {
+                    std::cout << env.filepath << ":" << ac->line << ": AssertionError: " << realString(ac->msg) << std::endl;
+                    throw new std::exception();
+                }
                 break;
             }
             default:
@@ -431,12 +435,29 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                 break;
             }
 
+            case ASTKind::ASSERTEXPR:
+            {
+                auto e = (AssertExpr *)exp;
+
+                Stack s;
+                interpExpr(e->body, s, env);
+                auto res = s.pop();
+
+                if (res.isFalse())
+                {
+                    std::cout << env.filepath << ":" << e->line << ": AssertionError: " << realString(e->msg) << std::endl;
+                    throw new std::exception();
+                }
+
+                break;
+            }
+
             case ASTKind::SYSCALLEXPR:
             {
                 auto e = (SyscallExpr *)exp;
                 
-                stack.assertMinSize(e->getNumArgs()+1, exp->line);
-                stack.peek().assertType(TypeKind::INT, exp->line);
+                //stack.assertMinSize(e->getNumArgs()+1, exp->line);
+                //stack.peek().assertType(TypeKind::INT, exp->line);
                 int sysnum = stack.pop().getValue() & 0xFFFFFF;
 
                 std::vector<long> args;
@@ -483,7 +504,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
             case ASTKind::LETSTMT:
             {
                 auto let = (LetExpr *)exp;
-                stack.assertMinSize(let->idents.size(), let->line);
+                //stack.assertMinSize(let->idents.size(), let->line);
                 for (int i = let->idents.size()-1; i >= 0; i--)
                     env.variables.insert(std::make_pair(let->idents[i], stack.pop()));
                 
@@ -498,7 +519,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
             case ASTKind::PEEKSTMT:
             {
                 auto peek = (PeekExpr *)exp;
-                stack.assertMinSize(peek->idents.size(), peek->line);
+                //stack.assertMinSize(peek->idents.size(), peek->line);
                 auto data = stack.toVector();
                 int size = data.size();
                 for (int i = 0; i < peek->idents.size(); i++)
@@ -522,41 +543,41 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                 
                 if (op->op == "+")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
-                    rhs.assertType(TypeKind::INT, op->line);
-                    lhs.assertType(TypeKind::INT, op->line);
+                    //rhs.assertType(TypeKind::INT, op->line);
+                    //lhs.assertType(TypeKind::INT, op->line);
                     stack.push(lhs.getValue() + rhs.getValue());
                 }
 
                 else if (op->op == "-")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
-                    rhs.assertType(TypeKind::INT, op->line);
-                    lhs.assertType(TypeKind::INT, op->line);
+                    //rhs.assertType(TypeKind::INT, op->line);
+                    //lhs.assertType(TypeKind::INT, op->line);
                     stack.push(lhs.getValue() - rhs.getValue());
                 }
 
                 else if (op->op == "*")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
-                    rhs.assertType(TypeKind::INT, op->line);
-                    lhs.assertType(TypeKind::INT, op->line);
+                    //rhs.assertType(TypeKind::INT, op->line);
+                    //lhs.assertType(TypeKind::INT, op->line);
                     stack.push(lhs.getValue() * rhs.getValue());
                 }
 
                 else if (op->op == "divmod")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
-                    rhs.assertType(TypeKind::INT, op->line);
-                    lhs.assertType(TypeKind::INT, op->line);
+                    //rhs.assertType(TypeKind::INT, op->line);
+                    //lhs.assertType(TypeKind::INT, op->line);
                     stack.push(lhs.getValue() / rhs.getValue());
                     stack.push(lhs.getValue() % rhs.getValue());
                 }
@@ -565,11 +586,11 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "<")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
-                    rhs.assertType(TypeKind::INT, op->line);
-                    lhs.assertType(TypeKind::INT, op->line);
+                    //rhs.assertType(TypeKind::INT, op->line);
+                    //lhs.assertType(TypeKind::INT, op->line);
                     if (lhs.getValue() < rhs.getValue())
                         stack.push(true);
                     else
@@ -578,11 +599,11 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == ">")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
-                    rhs.assertType(TypeKind::INT, op->line);
-                    lhs.assertType(TypeKind::INT, op->line);
+                    //rhs.assertType(TypeKind::INT, op->line);
+                    //lhs.assertType(TypeKind::INT, op->line);
                     if (lhs.getValue() > rhs.getValue())
                         stack.push(true);
                     else
@@ -591,11 +612,11 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "<=")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
-                    rhs.assertType(TypeKind::INT, op->line);
-                    lhs.assertType(TypeKind::INT, op->line);
+                    //rhs.assertType(TypeKind::INT, op->line);
+                    //lhs.assertType(TypeKind::INT, op->line);
                     if (lhs.getValue() <= rhs.getValue())
                         stack.push(true);
                     else
@@ -604,11 +625,11 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == ">=")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
-                    rhs.assertType(TypeKind::INT, op->line);
-                    lhs.assertType(TypeKind::INT, op->line);
+                    //rhs.assertType(TypeKind::INT, op->line);
+                    //lhs.assertType(TypeKind::INT, op->line);
                     if (lhs.getValue() >= rhs.getValue())
                         stack.push(true);
                     else
@@ -617,7 +638,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "=")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
                     if (lhs.getValue() == rhs.getValue())
@@ -628,7 +649,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "!=")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto rhs = stack.pop();
                     auto lhs = stack.pop();
                     if (lhs.getValue() != rhs.getValue())
@@ -641,53 +662,53 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "shr")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto b = stack.pop();
                     auto a = stack.pop();
-                    b.assertType(TypeKind::INT, op->line);
-                    a.assertType(TypeKind::INT, op->line);
+                    //b.assertType(TypeKind::INT, op->line);
+                    //a.assertType(TypeKind::INT, op->line);
                     stack.push(a.getValue() >> b.getValue());
                     break;
                 }
 
                 else if (op->op == "shl")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto b = stack.pop();
                     auto a = stack.pop();
-                    b.assertType(TypeKind::INT, op->line);
-                    a.assertType(TypeKind::INT, op->line);
+                    //b.assertType(TypeKind::INT, op->line);
+                    //a.assertType(TypeKind::INT, op->line);
                     stack.push(a.getValue() << b.getValue());
                     break;
                 }
 
                 else if (op->op == "or")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto b = stack.pop();
                     auto a = stack.pop();
-                    b.assertType(TypeKind::INT, op->line);
-                    a.assertType(TypeKind::INT, op->line);
+                    //b.assertType(TypeKind::INT, op->line);
+                    //a.assertType(TypeKind::INT, op->line);
                     stack.push(a.getValue() | b.getValue());
                     break;
                 }
 
                 else if (op->op == "and")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto b = stack.pop();
                     auto a = stack.pop();
-                    b.assertType(TypeKind::INT, op->line);
-                    a.assertType(TypeKind::INT, op->line);
+                    //b.assertType(TypeKind::INT, op->line);
+                    //a.assertType(TypeKind::INT, op->line);
                     stack.push(a.getValue() & b.getValue());
                     break;
                 }
 
                 else if (op->op == "not")
                 {
-                    stack.assertMinSize(1, op->line);
+                    //stack.assertMinSize(1, op->line);
                     auto a = stack.pop();
-                    a.assertType(TypeKind::INT, op->line);
+                    //a.assertType(TypeKind::INT, op->line);
                     stack.push(~a.getValue());
                     break;
                 }
@@ -696,20 +717,20 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "!8")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto ptr = stack.pop();
                     auto byte = stack.pop();
-                    ptr.assertType(TypeKind::PTR, op->line);
-                    byte.assertType(TypeKind::INT, op->line);
+                    //ptr.assertType(TypeKind::PTR, op->line);
+                    //byte.assertType(TypeKind::INT, op->line);
                     *((unsigned char *)ptr.getValue()) = byte.getValue() & 0xFF;
                     break;
                 }
 
                 else if (op->op == "@8")
                 {
-                    stack.assertMinSize(1, op->line);
+                    //stack.assertMinSize(1, op->line);
                     auto ptr = stack.pop();
-                    ptr.assertType(TypeKind::PTR, op->line);
+                    //ptr.assertType(TypeKind::PTR, op->line);
                     long byte = (long)*((unsigned char *)ptr.getValue());
                     stack.push(byte);
                     break;
@@ -717,20 +738,20 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "!16")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto ptr = stack.pop();
                     auto byte = stack.pop();
-                    ptr.assertType(TypeKind::PTR, op->line);
-                    byte.assertType(TypeKind::INT, op->line);
+                    //ptr.assertType(TypeKind::PTR, op->line);
+                    //byte.assertType(TypeKind::INT, op->line);
                     *((unsigned short *)ptr.getValue()) = byte.getValue() & 0xFFFF;
                     break;
                 }
 
                 else if (op->op == "@16")
                 {
-                    stack.assertMinSize(1, op->line);
+                    //stack.assertMinSize(1, op->line);
                     auto ptr = stack.pop();
-                    ptr.assertType(TypeKind::PTR, op->line);
+                    //ptr.assertType(TypeKind::PTR, op->line);
                     long byte = (long)*((unsigned short *)ptr.getValue());
                     stack.push(byte);
                     break;
@@ -739,20 +760,20 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "!32")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto ptr = stack.pop();
                     auto byte = stack.pop();
-                    ptr.assertType(TypeKind::PTR, op->line);
-                    byte.assertType(TypeKind::INT, op->line);
+                    //ptr.assertType(TypeKind::PTR, op->line);
+                    //byte.assertType(TypeKind::INT, op->line);
                     *((unsigned int *)ptr.getValue()) = byte.getValue() & 0xFFFFFFFF;
                     break;
                 }
 
                 else if (op->op == "@32")
                 {
-                    stack.assertMinSize(1, op->line);
+                    //stack.assertMinSize(1, op->line);
                     auto ptr = stack.pop();
-                    ptr.assertType(TypeKind::PTR, op->line);
+                    //ptr.assertType(TypeKind::PTR, op->line);
                     long byte = (long)*((unsigned int *)ptr.getValue());
                     stack.push(byte);
                     break;
@@ -760,20 +781,20 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "!64")
                 {
-                    stack.assertMinSize(2, op->line);
+                    //stack.assertMinSize(2, op->line);
                     auto ptr = stack.pop();
                     auto byte = stack.pop();
-                    ptr.assertType(TypeKind::PTR, op->line);
-                    byte.assertType(TypeKind::INT, op->line);
+                    //ptr.assertType(TypeKind::PTR, op->line);
+                    //byte.assertType(TypeKind::INT, op->line);
                     *((unsigned long *)ptr.getValue()) = byte.getValue();
                     break;
                 }
 
                 else if (op->op == "@64")
                 {
-                    stack.assertMinSize(1, op->line);
+                    //stack.assertMinSize(1, op->line);
                     auto ptr = stack.pop();
-                    ptr.assertType(TypeKind::PTR, op->line);
+                    //ptr.assertType(TypeKind::PTR, op->line);
                     long byte = (long)*((unsigned long *)ptr.getValue());
                     stack.push(byte);
                     break;
@@ -783,7 +804,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "cast(bool)")
                 {
-                    stack.assertMinSize(1, op->line);
+                    //stack.assertMinSize(1, op->line);
                     auto a = stack.pop();
                     if (a.getValue() > 0)
                         stack.push(true);
@@ -794,7 +815,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "cast(int)")
                 {
-                    stack.assertMinSize(1, op->line);
+                    //stack.assertMinSize(1, op->line);
                     auto a = stack.pop();
                     stack.push(Data(a.getValue(), TypeKind::INT));
                     break;
@@ -802,7 +823,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
                 else if (op->op == "cast(ptr)")
                 {
-                    stack.assertMinSize(1, op->line);
+                    //stack.assertMinSize(1, op->line);
                     auto a = stack.pop();
                     stack.push(Data(a.getValue(), TypeKind::PTR));
                     break;
@@ -812,13 +833,13 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
             }
 
             case ASTKind::PRINTEXPR:
-                stack.assertMinSize(1, exp->line);
+                //stack.assertMinSize(1, exp->line);
                 std::cout << stack.pop().getValue() << std::endl;
                 break;
 
             case ASTKind::DUPEXPR:
             {
-                stack.assertMinSize(1, exp->line);
+                //stack.assertMinSize(1, exp->line);
                 stack.push(stack.peek());
                 break;
             }
@@ -837,7 +858,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
             case ASTKind::OFFSETEXPR:
             {
-                stack.assertMinSize(1, exp->line);
+                //stack.assertMinSize(1, exp->line);
                 auto i = stack.pop();
                 env.offset += i.getValue();
                 break;
@@ -851,25 +872,25 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
             case ASTKind::MAXEXPR:
             {
-                stack.assertMinSize(2, exp->line);
+                //stack.assertMinSize(2, exp->line);
                 auto rhs = stack.pop();
                 auto lhs = stack.pop();
-                rhs.assertType(TypeKind::INT, exp->line);
-                lhs.assertType(TypeKind::INT, exp->line);
+                //rhs.assertType(TypeKind::INT, exp->line);
+                //lhs.assertType(TypeKind::INT, exp->line);
                 stack.push(std::max(lhs.getValue(), rhs.getValue()));
                 break;
             }
 
             case ASTKind::DROPEXPR:
             {
-                stack.assertMinSize(1, exp->line);
+                //stack.assertMinSize(1, exp->line);
                 stack.pop();
                 break;
             }
 
             case ASTKind::SWAPEXPR:
             {
-                stack.assertMinSize(1, exp->line);
+                //stack.assertMinSize(1, exp->line);
                 auto rhs = stack.pop();
                 auto lhs = stack.pop();
                 stack.push(rhs);
@@ -879,7 +900,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
             case ASTKind::ROTEXPR:
             {
-                stack.assertMinSize(3, exp->line);
+                //stack.assertMinSize(3, exp->line);
                 auto c = stack.pop();
                 auto b = stack.pop();
                 auto a = stack.pop();
@@ -891,7 +912,7 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
 
             case ASTKind::OVEREXPR:
             {
-                stack.assertMinSize(2, exp->line);
+                //stack.assertMinSize(2, exp->line);
                 auto b = stack.pop();
                 auto a = stack.pop();
                 stack.push(a);
