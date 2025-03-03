@@ -265,7 +265,8 @@ public:
 class CallLikeExpr : public Expr
 {
 public:
-    CallLikeExpr();
+    VarExpr *proc;
+    CallLikeExpr(VarExpr *);
     ~CallLikeExpr();
     std::string toString() override;
     ASTKind getASTKind() override;

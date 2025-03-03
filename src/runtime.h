@@ -31,11 +31,17 @@ public:
     std::vector<std::string> included;
     int offset = 0;
     std::string filepath;
+    std::string path;
     Env(int, char**);
     Env(const Env&);
+    Env();
     ~Env();
     Env& operator=(Env);
     Env& operator+=(Env);
+    void setPath(std::string);
+    bool containsKey(std::string);
+    Data getVar(std::string);
+    ProcCmd *getProc(std::string);
 };
 
 

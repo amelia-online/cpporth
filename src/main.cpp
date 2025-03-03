@@ -4,7 +4,7 @@
 #include "helper.h"
 #include "parser.h"
 #include "runtime.h"
-#include "typechecker.h"
+//#include "typechecker.h"
 
 int main(int argc, char **argv)
 {

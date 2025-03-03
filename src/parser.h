@@ -25,6 +25,7 @@ public:
     PeekExpr *parsePeek();
     AssertExpr *parseAssert();
     AddrOfExpr *parseAddrOf();
+    CallLikeExpr *parseCallLike();
     IncludeCmd *parseInclude();
     std::vector<Expr *> parseExpr();
     Type parseType();

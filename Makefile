@@ -2,6 +2,7 @@ CC = g++
 FLAGS = -g -fsanitize=address -std=c++20
 TEST=src/test.txt
 OBJS=lexer.o main.o parser.o ast.o runtime.o helper.o syscalls.o
+OBJSNOMAIN= lexer.o parser.o ast.o runtime.o helper.o syscalls.o
 GTEST=./googletest
 
 all: cpporth
@@ -10,10 +11,12 @@ run: cpporth
 	./cpporth $(TEST)
 
 clean:
-	rm *.o ./cpporth
+	rm *.o ./cpporth ./cpporthtests
 
-tests: tests/tests.cpp
-	$(CC) -I$(GTEST)/googletest/include -L$(GTEST)/build/lib -lgtest tests/tests.cpp -o cpporthtests -std=c++20
+tests: cpporthtests
+
+cpporthtests: tests/tests.cpp $(OBJSNOMAIN)
+	$(CC) $(FLAGS) -I$(GTEST)/googletest/include -L$(GTEST)/build/lib -lgtest $(OBJSNOMAIN) tests/tests.cpp -o cpporthtests
 	./cpporthtests
 
 cpporth: main.o lexer.o parser.o ast.o runtime.o helper.o syscalls.o

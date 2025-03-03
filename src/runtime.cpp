@@ -22,6 +22,24 @@ Env::Env(const Env& other)
     included = std::vector<std::string>(other.included);
     offset = other.offset;
     filepath = other.filepath;
+    path = other.path;
+}
+
+Env::Env() {;}
+
+bool Env::containsKey(std::string key)
+{
+    return (variables.find(key) != variables.end() || procs.find(key) != procs.end());
+}
+
+Data Env::getVar(std::string key)
+{
+    return variables.at(key);
+}
+
+ProcCmd *Env::getProc(std::string key)
+{
+    return procs.at(key);
 }
 
 Env::~Env()
@@ -45,6 +63,18 @@ Env& Env::operator+=(Env other)
     std::swap(procs, other.procs);
     std::swap(included, other.included);
     return *this;
+}
+
+void Env::setPath(std::string filepath)
+{
+    if (filepath.find('/') == std::string::npos)
+    {
+        path = "";
+        return;
+    }
+
+    auto pos = filepath.find_last_of('/');
+    path = filepath.substr(0, pos+1);
 }
 
 Data::Data() : value(-1), type(TypeKind::ADDR), isNone_(true) {;}
@@ -252,7 +282,7 @@ void include(std::string path, Env& env)
 
                 Env e2(env);
                 e2.filepath = realString(ic->path);
-                include(realString(ic->path), e2);
+                include(realString(e2.path + ic->path), e2);
                 env += e2;
                 break;
             }
@@ -316,7 +346,7 @@ Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
                 else
                     break;
 
-
+                env.setPath(ic->path);
                 Env e2(env);
                 e2.filepath = realString(ic->path);
                 include(realString(ic->path), e2);

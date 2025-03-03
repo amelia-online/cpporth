@@ -396,18 +396,21 @@ AddrOfExpr::~AddrOfExpr()
 }
 std::string AddrOfExpr::toString()
 {
-    return "(AddrOfExpr addr-of)";
+    return "(AddrOfExpr " + proc->name + ")";
 }
 ASTKind AddrOfExpr::getASTKind()
 {
     return ASTKind::ADDROFEXPR;
 }
 
-CallLikeExpr::CallLikeExpr() {;}
-CallLikeExpr::~CallLikeExpr() {;}
+CallLikeExpr::CallLikeExpr(VarExpr *p) : proc(p) {;}
+CallLikeExpr::~CallLikeExpr() 
+{
+    delete proc;
+}
 std::string CallLikeExpr::toString() 
 {
-    return "(CallLikeExpr call-like)";
+    return "(CallLikeExpr " + proc->name + ")";
 }
 ASTKind CallLikeExpr::getASTKind()
 {
