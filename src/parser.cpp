@@ -183,15 +183,6 @@ AddrOfExpr *Parser::parseAddrOf()
     return new AddrOfExpr(v);
 }
 
-CallLikeExpr *Parser::parseCallLike()
-{
-    index++;
-    check(peek(), TokenType::VAR);
-    auto v = new VarExpr(peek().content);
-    index++;
-    return new CallLikeExpr(v);
-}
-
 AssertExpr *Parser::parseAssert()
 {
     index++;
@@ -271,10 +262,9 @@ std::vector<Expr *> Parser::parseExpr()
             }
             case TokenType::CALLLIKE:
             {
-                auto e = parseCallLike();
+                auto e = new CallLikeExpr();
                 e->line = t.line;
                 subexps.push_back(e);
-                index--;
                 break;
             }
             case TokenType::ASSERT:

@@ -254,8 +254,8 @@ public:
 
 class AddrOfExpr : public Expr
 {
-    VarExpr *proc;
 public:
+    VarExpr *proc;
     AddrOfExpr(VarExpr *);
     ~AddrOfExpr();
     std::string toString() override;
@@ -264,9 +264,8 @@ public:
 
 class CallLikeExpr : public Expr
 {
-    VarExpr *proc;
 public:
-    CallLikeExpr(VarExpr *);
+    CallLikeExpr();
     ~CallLikeExpr();
     std::string toString() override;
     ASTKind getASTKind() override;

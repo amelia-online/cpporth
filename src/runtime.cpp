@@ -386,9 +386,51 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                     stack.push(env.variables.at(v->name));
                 else
                 {
-                    std::cout << "Error:" << exp->line << ": Unknown identifier encountered: '" << v->name << "'\n";
+                    std::cout << "RuntimeError:" << exp->line << ": Unknown identifier encountered: '" << v->name << "'\n";
                     throw new std::exception();
                 }
+                break;
+            }
+
+            case ASTKind::ADDROFEXPR:
+            {
+                auto a = (AddrOfExpr *)exp;
+                auto v = a->proc;
+
+                if (env.procs.find(v->name) == env.procs.end())
+                {
+                    std::cout << "RuntimeError:" << exp->line << ": addr-of: procedure does not exist: '" << v->name << "'\n";
+                    throw new std::exception();
+                }
+                
+                auto ptr = new char[v->name.length()+1];
+                std::strncpy(ptr, v->name.c_str(), v->name.length()+1);
+                env.toClean.push_back((unsigned char *)ptr);
+
+                stack.push(Data((long)ptr, TypeKind::ADDR));
+
+                break;
+            }
+
+            case ASTKind::CALLLIKEEXPR:
+            {
+                auto c = (CallLikeExpr *)exp;
+                auto addr = stack.pop();
+                auto v = std::string((char *)addr.getValue());
+
+
+                if (env.procs.find(v) == env.procs.end())
+                {
+                    std::cout << "RuntimeError:" << exp->line << ": call-like: addr is invalid: '" << v << "'\n";
+                    throw new std::exception();
+                }
+
+                auto proc = env.procs.at(v);
+
+
+                Env e2(env);
+                interpExpr(proc->body, stack, e2);
+
                 break;
             }
 

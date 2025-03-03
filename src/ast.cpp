@@ -403,11 +403,8 @@ ASTKind AddrOfExpr::getASTKind()
     return ASTKind::ADDROFEXPR;
 }
 
-CallLikeExpr::CallLikeExpr(VarExpr *p) : proc(p) {;}
-CallLikeExpr::~CallLikeExpr() 
-{
-    delete proc;    
-}
+CallLikeExpr::CallLikeExpr() {;}
+CallLikeExpr::~CallLikeExpr() {;}
 std::string CallLikeExpr::toString() 
 {
     return "(CallLikeExpr call-like)";
