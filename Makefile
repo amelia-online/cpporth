@@ -2,6 +2,7 @@ CC = g++
 FLAGS = -g -fsanitize=address -std=c++20
 TEST=src/test.txt
 OBJS=lexer.o main.o parser.o ast.o runtime.o helper.o syscalls.o
+GTEST=./googletest
 
 all: cpporth
 
@@ -10,6 +11,10 @@ run: cpporth
 
 clean:
 	rm *.o ./cpporth
+
+tests: tests/tests.cpp
+	$(CC) -I$(GTEST)/googletest/include -L$(GTEST)/build/lib -lgtest tests/tests.cpp -o cpporthtests -std=c++20
+	./cpporthtests
 
 cpporth: main.o lexer.o parser.o ast.o runtime.o helper.o syscalls.o
 	$(CC) $(FLAGS) $(OBJS) -o cpporth
