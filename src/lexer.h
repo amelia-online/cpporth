@@ -47,6 +47,7 @@ enum class TokenType
     SYSCALLN,
     CHAR,
     ADDROF, // 40
+    CALLLIKE
 };
 
 class Token

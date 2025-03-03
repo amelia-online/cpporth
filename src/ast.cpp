@@ -389,8 +389,11 @@ ASTKind ResetExpr::getASTKind()
     return ASTKind::RESETEXPR;
 }
 
-AddrOfExpr::AddrOfExpr() {;}
-AddrOfExpr::~AddrOfExpr() {;}
+AddrOfExpr::AddrOfExpr(VarExpr *p) : proc(p) {;}
+AddrOfExpr::~AddrOfExpr()
+{
+    delete proc;
+}
 std::string AddrOfExpr::toString()
 {
     return "(AddrOfExpr addr-of)";
@@ -398,6 +401,20 @@ std::string AddrOfExpr::toString()
 ASTKind AddrOfExpr::getASTKind()
 {
     return ASTKind::ADDROFEXPR;
+}
+
+CallLikeExpr::CallLikeExpr(VarExpr *p) : proc(p) {;}
+CallLikeExpr::~CallLikeExpr() 
+{
+    delete proc;    
+}
+std::string CallLikeExpr::toString() 
+{
+    return "(CallLikeExpr call-like)";
+}
+ASTKind CallLikeExpr::getASTKind()
+{
+    return ASTKind::CALLLIKEEXPR;
 }
 
 SwapExpr::SwapExpr() {;}

@@ -17,8 +17,8 @@ void check(Token t, TokenType tt)
 {
     if (t.type != tt)
     {
-        std::cout << "Error:" << t.line << ": token types differ: " << std::to_string((int)tt)
-            << ":" << t.content << "(" << std::to_string((int)t.type) << ")" << std::endl;
+        std::cout << "ParseError:" << t.line << ": token types differ: expected " << std::to_string((int)tt)
+            << " but got " << t.content << "(" << std::to_string((int)t.type) << ")" << std::endl;
         throw new std::exception();
     }
 }
@@ -78,7 +78,7 @@ Type Parser::parseType()
         case TokenType::ADDR:
             return Type(TypeKind::ADDR);
         default:
-            std::cout << "Error: not a type: " << t.toString() << std::endl;
+            std::cout << "ParseError:" << t.line << ":  not a type: " << t.toString() << std::endl;
             throw new std::exception();
     }
 }
@@ -174,6 +174,24 @@ IfExpr *Parser::parseIf()
     return new IfExpr(body, elze, next);
 }
 
+AddrOfExpr *Parser::parseAddrOf()
+{
+    index++;
+    check(peek(), TokenType::VAR);
+    auto v = new VarExpr(peek().content);
+    index++;
+    return new AddrOfExpr(v);
+}
+
+CallLikeExpr *Parser::parseCallLike()
+{
+    index++;
+    check(peek(), TokenType::VAR);
+    auto v = new VarExpr(peek().content);
+    index++;
+    return new CallLikeExpr(v);
+}
+
 AssertExpr *Parser::parseAssert()
 {
     index++;
@@ -196,7 +214,8 @@ std::vector<Expr *> Parser::parseExpr()
         TokenType::MAX, TokenType::PRINT,
         TokenType::SYSCALLN, TokenType::NEWLINE, TokenType::PEEK,
         TokenType::WHILE, TokenType::IF, TokenType::LET, TokenType::OFFSET,
-        TokenType::RESET, TokenType::MEMORY, TokenType::ASSERT, TokenType::ADDROF
+        TokenType::RESET, TokenType::MEMORY, TokenType::ASSERT, 
+        TokenType::ADDROF, TokenType::CALLLIKE,
     };
 
     while (std::find(allowed.begin(), allowed.end(), t.type) != allowed.end())
@@ -244,9 +263,18 @@ std::vector<Expr *> Parser::parseExpr()
             }
             case TokenType::ADDROF:
             {
-                auto e = new AddrOfExpr();
+                auto e = parseAddrOf();
                 e->line = t.line;
                 subexps.push_back(e);
+                index--;
+                break;
+            }
+            case TokenType::CALLLIKE:
+            {
+                auto e = parseCallLike();
+                e->line = t.line;
+                subexps.push_back(e);
+                index--;
                 break;
             }
             case TokenType::ASSERT:

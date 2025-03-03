@@ -306,13 +306,15 @@ Token Lexer::lexKeyword()
         tt = TokenType::ELSE;
     else if (acc == "addr-of")
         tt = TokenType::ADDROF;
+    else if (acc == "call-like")
+        tt = TokenType::CALLLIKE;
     else if (acc == "addr")
         tt = TokenType::ADDR;
     else if (acc == "max")
         tt = TokenType::MAX;
     else if (acc == "cast(int)" || acc == "cast(bool)" || acc == "cast(ptr)" 
         || acc == "and" || acc == "or" || acc == "not" || acc == "shr" || acc == "shl" 
-        || acc == "idivmod" || acc == "call-like" || acc == "divmod")
+        || acc == "idivmod" || acc == "divmod")
     {
         tt = TokenType::OP;
     }

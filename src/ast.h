@@ -43,6 +43,7 @@ enum class ASTKind
     ASSERTEXPR,
     ADDROFEXPR,
     ASSERTCMD,
+    CALLLIKEEXPR,
 };
 
 class AST 
@@ -253,9 +254,20 @@ public:
 
 class AddrOfExpr : public Expr
 {
+    VarExpr *proc;
 public:
-    AddrOfExpr();
+    AddrOfExpr(VarExpr *);
     ~AddrOfExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class CallLikeExpr : public Expr
+{
+    VarExpr *proc;
+public:
+    CallLikeExpr(VarExpr *);
+    ~CallLikeExpr();
     std::string toString() override;
     ASTKind getASTKind() override;
 };
