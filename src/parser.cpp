@@ -471,21 +471,10 @@ MemoryCmd *Parser::parseMemory()
 IncludeCmd *Parser::parseInclude()
 {
     index++;
-    std::vector<Expr*> path = parseExpr(); // maybe dont use this.
-    if (path.size() != 1 || path[0]->getASTKind() != ASTKind::STRINGLITEXPR) {
-
-        for (auto a : path)
-            std::cout << a->toString() << std::endl;
-
-        error("Error: expected string.");
-    }
-
-    //check(peek(), TokenType::NEWLINE);
-    
-    std::string p = ((StringLitExpr *)path[0])->getValue();
-    delete path[0];
-
-    return new IncludeCmd(p);
+    check(peek(), TokenType::STRING);
+    auto e = new IncludeCmd(realString(pop().content));
+    //std::cout << e->toString();
+    return e;
 }
 
 std::vector<AST*> Parser::parse()

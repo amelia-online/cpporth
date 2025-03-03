@@ -181,7 +181,7 @@ Data Stack::peek()
 {
     if (size() < 1)
     {
-        std::cout << "Error: stack is empty." << std::endl;
+        std::cout << "RuntimeError: peek: stack is empty." << std::endl;
         throw new std::exception();
     }
     return data[data.size()-1];
@@ -191,7 +191,7 @@ Data Stack::pop()
 {
     if (size() < 1)
     {
-        std::cout << "Error: stack is empty." << std::endl;
+        std::cout << "RuntimeError: pop: stack is empty." << std::endl;
         throw new std::exception();
     }
 
@@ -291,6 +291,7 @@ Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
 {
     for (auto ast : prog)
     {
+        //std::cout << ast->toString() << std::endl;
         switch (ast->getASTKind())
         {
             case ASTKind::PROCCMD:
