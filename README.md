@@ -41,7 +41,7 @@ $ make tests
 This will bring us back to the main project directory and build and run the tests.
 
 ---
-## Unsuppported Features
+## Unsupported Features
 
 * `call-like`: because I have no idea what it does, and there is little to no documentation on it.
 
