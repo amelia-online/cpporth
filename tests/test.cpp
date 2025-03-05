@@ -15,7 +15,7 @@ TEST (CPPorth, EnvSetPath) {
 
 TEST (CPPorth, Include1)
 {
-    std::string code = "include \"porth/std/std.porth\"\n\n";
+    std::string code =  "include \"porth/std/std.porth\"\n\n";
                 code += "proc main in end\n";
     
     Lexer l(code);
@@ -31,6 +31,32 @@ TEST (CPPorth, Include1)
 
     ASSERT_TRUE(e.containsKey("sizeof(u64)"));
     ASSERT_EQ(e.getVar("sizeof(u64)").getValue(), 8);
+
+    p.cleanup(asts);
+}
+
+TEST (CPPorth, Include2)
+{
+    std::string code =  "include \"porth/std/std.porth\"\n\n";
+                code += "include \"tests/included.porth\"\n\n";
+                code += "proc main in end\n";
+    
+    Lexer l(code);
+    Parser p(l.lex());
+
+    Stack s;
+    Env e;
+    auto asts = p.parse();
+    interp(asts, s, e);
+
+    ASSERT_TRUE(e.containsKey("stderr"));
+    ASSERT_EQ(e.getVar("stderr").getValue(), 2);
+
+    ASSERT_TRUE(e.containsKey("sizeof(u64)"));
+    ASSERT_EQ(e.getVar("sizeof(u64)").getValue(), 8);
+
+    ASSERT_TRUE(e.containsKey("yes"));
+    ASSERT_EQ(e.getVar("yes").getValue(), 1);
 
     p.cleanup(asts);
 }

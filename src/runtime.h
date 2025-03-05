@@ -40,6 +40,9 @@ public:
     Env& operator+=(Env);
     void setPath(std::string);
     bool containsKey(std::string);
+    bool isIncluded(std::string);
+    bool isProc(std::string);
+    bool isVariable(std::string);
     Data getVar(std::string);
     ProcCmd *getProc(std::string);
 };

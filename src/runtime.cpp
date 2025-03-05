@@ -77,6 +77,21 @@ void Env::setPath(std::string filepath)
     path = filepath.substr(0, pos+1);
 }
 
+bool Env::isIncluded(std::string n)
+{
+    return std::find(included.begin(), included.end(), n) != included.end();
+}
+
+bool Env::isProc(std::string n)
+{
+    return procs.find(n) != procs.end();
+}
+
+bool Env::isVariable(std::string n)
+{
+    return variables.find(n) != variables.end();
+}
+
 Data::Data() : value(-1), type(TypeKind::ADDR), isNone_(true) {;}
 Data::Data(long val, TypeKind t) : value(val), type(t), isNone_(false) {;}
 
@@ -309,7 +324,7 @@ void include(std::string path, Env& env)
                 break;
             }
             default:
-                std::cout << "Error:" << ast->line << ": not a command: " << ast->toString() << std::endl;
+                std::cout << "RuntimeError:" << ast->line << ": not a command: " << ast->toString() << std::endl;
                 throw new std::exception();
         }
     }
@@ -375,7 +390,7 @@ Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
                 break;
             }
             default:
-                std::cout << "Error:" << ast->line << ": " << ast->line << ": not a command: " << ast->toString() << std::endl;
+                std::cout << "RuntimeError:" << ast->line << ": " << ast->line << ": not a command: " << ast->toString() << std::endl;
                 throw new std::exception();
         }
     }
