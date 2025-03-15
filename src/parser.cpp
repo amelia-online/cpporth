@@ -1,5 +1,8 @@
 #include "parser.h"
 #include "helper.h"
+#include <unordered_map>
+#include <utility>
+
 
 void todo()
 {
@@ -216,7 +219,7 @@ std::vector<Expr *> Parser::parseExpr()
         TokenType::WHILE, TokenType::IF, TokenType::LET, TokenType::OFFSET,
         TokenType::RESET, TokenType::MEMORY, TokenType::ASSERT, 
         TokenType::ADDROF, TokenType::CALLLIKE, TokenType::FREE,
-        TokenType::ALLOC,
+        TokenType::ALLOC, TokenType::NEW, TokenType::MATCH,
     };
 
     while (std::find(allowed.begin(), allowed.end(), t.type) != allowed.end())
@@ -241,11 +244,27 @@ std::vector<Expr *> Parser::parseExpr()
                 subexps.push_back(new CharExpr(realChar(t.content)));
                 break;
             }
+            case TokenType::NEW:
+            {
+                auto n = parseNew();
+                n->line = t.line;
+                subexps.push_back(n);
+                index--;
+                break;
+            }
             case TokenType::ALLOC:
             {
                 auto a = new AllocExpr();
                 a->line = t.line;
                 subexps.push_back(a);
+                break;
+            }
+            case TokenType::MATCH:
+            {
+                auto m = parseMatch();
+                m->line = t.line;
+                subexps.push_back(m);
+                index--;
                 break;
             }
             case TokenType::FREE:
@@ -435,9 +454,183 @@ std::vector<Expr *> Parser::parseExpr()
     return subexps;
 }
 
+Field Parser::parseField()
+{
+    check(peek(), TokenType::VAR);      // var
+    std::string name = pop().content;   // :
+    check(pop(), TokenType::COLON);     // :
+    check(pop(), TokenType::COLON);     // type
+    auto type = parseType();            // , OR )
+    return Field(name, type);
+}
+
+Variant Parser::parseVariant(std::string parent)
+{
+    check(peek(), TokenType::VAR);
+    auto name = pop().content;
+    check(peek(), TokenType::LSQUARE);
+    index++;
+
+    std::vector<Field> fields;
+    bool isField = true;
+    while (index < input.size())
+    {
+        auto token = peek();
+
+        if (token.type == TokenType::RSQUARE)
+            break;
+
+        if (token.type == TokenType::NEWLINE)
+        {
+            index++;
+            continue;
+        }
+        
+        if (isField)
+        {
+            fields.push_back(parseField());
+            isField = false;
+            continue;
+        }
+        else if (token.type == TokenType::COMMA)
+        {
+            isField = true;
+            index++;
+            continue;
+        } 
+        else
+        {
+            std::cout << "[Error] variant\n";
+            throw new std::exception();
+        }
+
+    }
+    index++;
+    return Variant(name, parent, fields);
+}   
+
+VariantInstanceExpr *Parser::parseNew()
+{
+    index++;
+    check(peek(), TokenType::VAR);
+    std::string parent = pop().content;
+    check(pop(), TokenType::COLON);
+    check(pop(), TokenType::COLON);
+    check(peek(), TokenType::VAR);
+    std::string name = pop().content;
+    std::vector<std::vector<Expr*> > args;
+    check(pop(), TokenType::LSQUARE);
+
+    bool isArg = true;
+    while (index < input.size())
+    {
+        auto token = peek();
+
+        if (token.type == TokenType::RSQUARE)
+            break;
+
+        if (token.type == TokenType::NEWLINE)
+        {
+            index++;
+            continue;
+        }
+
+        if (isArg)
+        {
+            args.push_back(parseExpr());
+            isArg = false;
+        }
+        else if (token.type == TokenType::COMMA)
+        {
+            isArg = true;
+            index++;
+            continue;
+        }
+        else throw new std::exception();
+    }
+    index++;
+    return new VariantInstanceExpr(name, parent, args);
+}
+
+MatchExpr *Parser::parseMatch()
+{
+    index++;
+    std::unordered_map<std::string, VariantBinding*> map;
+
+    bool isBranch = false;
+    while (index < input.size())
+    {
+        auto token = peek();
+
+        if (token.type == TokenType::END)
+            break;
+        if (token.type == TokenType::NEWLINE)
+        {
+            index++;
+            continue;
+        }
+
+        if (isBranch)
+        {
+            // todo...
+        }
+        else if (token.type == TokenType::LINE)
+        {
+            isBranch = true;
+            index++;
+            continue;
+        }
+        else throw new std::exception();
+        
+    }
+
+}
+
 TypeCmd *Parser::parseTypeCmd()
 {
-    return nullptr;
+    index++;
+    check(peek(), TokenType::VAR);
+    std::string name = pop().content;
+    std::vector<Variant> variants;
+
+    bool isVariant = false;
+    while (index < input.size())
+    {
+        auto token = peek();
+        //std::cout << token.content << "\n";
+        if (token.type == TokenType::END)
+            break;
+
+        if (token.type == TokenType::NEWLINE)
+        {
+            index++;
+            continue;
+        }
+
+        if (isVariant)
+        {
+            //std::cout << "Parsing variant...\n";
+            auto v = parseVariant(name);
+            //std::cout << "Parsed: " << v.toString() << "\n";
+            variants.push_back(v);
+            isVariant = false;
+            //std::cout << "...done parsing variant\n";
+        } 
+        else if (token.type == TokenType::LINE)
+        {
+            isVariant = true;
+            index++;
+            continue;
+        }
+        else
+        {
+            std::cout << "[Error] typecmd\n";
+            throw new std::exception();
+        }
+    }
+
+    index++;
+    return new TypeCmd(name, variants);
 }
 
 ConstCmd *Parser::parseConst()
@@ -447,7 +640,6 @@ ConstCmd *Parser::parseConst()
     check(identToken, TokenType::VAR);
     std::string ident = identToken.content;
     std::vector<Expr *> expr = parseExpr();
-    //index--;
     check(pop(), TokenType::END);
     return new ConstCmd(ident, expr);
 }

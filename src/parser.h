@@ -28,8 +28,11 @@ public:
     CallLikeExpr *parseCallLike();
     IncludeCmd *parseInclude();
     TypeCmd *parseTypeCmd();
+    Variant parseVariant(std::string);
+    Field parseField();
     ArrayLitExpr *parseArrayLit();
     MatchExpr *parseMatch();
+    VariantInstanceExpr *parseNew();
     std::vector<Expr *> parseExpr();
     Type parseType();
     FnSignature parseSignature();

@@ -211,15 +211,17 @@ public:
     ASTKind getASTKind() override;
 };
 
-/*
 class VariantInstanceExpr : public Expr
 {
 public:
     std::string parent;
     std::string variant;
-    // todo
+    std::vector<std::vector<Expr *> > args;
+    VariantInstanceExpr(std::string, std::string, std::vector<std::vector<Expr *> >);
+    ~VariantInstanceExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
 };
-*/
 
 class VariantBinding : public Expr
 {

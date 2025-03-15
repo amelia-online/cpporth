@@ -53,10 +53,13 @@ enum class TokenType
     MATCH,
     RSQUARE,
     LSQUARE,
+    RPAREN,
+    LPAREN,
     COMMA,
     ALLOC,
     FREE, // 48
-    COLON
+    COLON,
+    NEW
 };
 
 class Token

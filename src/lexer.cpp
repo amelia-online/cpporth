@@ -49,31 +49,36 @@ std::vector<Token> Lexer::lex()
 
         if (ch == ':')
         {
-            tokens.push_back(Token(index, ++index, this->line, TokenType::COLON, ":"));
+            tokens.push_back(Token(index, index + 1, this->line, TokenType::COLON, ":"));
+            index++;
             continue;
         }
 
         if (ch == '|')
         {
-            tokens.push_back(Token(index, ++index, this->line, TokenType::LINE, "|"));
+            tokens.push_back(Token(index, index + 1, this->line, TokenType::LINE, "|"));
+            index++;
             continue;
         }
 
         if (ch == '[')
         {
-            tokens.push_back(Token(index, ++index, this->line, TokenType::LSQUARE, "["));
+            tokens.push_back(Token(index, index + 1, this->line, TokenType::LSQUARE, "["));
+            index++;
             continue;
         }
 
         if (ch == ']')
         {
-            tokens.push_back(Token(index, ++index, this->line, TokenType::RSQUARE, "]"));
+            tokens.push_back(Token(index, index + 1, this->line, TokenType::RSQUARE, "]"));
+            index++;
             continue;
         }
 
         if (ch == ',')
         {
-            tokens.push_back(Token(index, ++index, this->line, TokenType::COMMA, ","));
+            tokens.push_back(Token(index, index + 1, this->line, TokenType::COMMA, ","));
+            index++;
             continue;
         }
 
@@ -113,6 +118,18 @@ std::vector<Token> Lexer::lex()
 
         else if (alphabet.find(ch) != std::string::npos)    
             tokens.push_back(lexKeyword());
+
+        else if (ch == '(')
+        {
+            tokens.push_back(Token(index, index + 1, this->line, TokenType::LPAREN, "("));
+            index++;
+        }
+
+        else if (ch == ')')
+        {
+            tokens.push_back(Token(index, index + 1, this->line, TokenType::RPAREN, ")"));
+            index++;
+        }
 
     }
     tokens.push_back(Token(index, index, line, TokenType::END_OF_FILE, "EOF"));
@@ -342,10 +359,12 @@ Token Lexer::lexKeyword()
         tt = TokenType::TYPE;
     else if (acc == "max")
         tt = TokenType::MAX;
-    else if (acc == "alloc")
+    else if (acc == "alloc") // Porth++
         tt = TokenType::ALLOC;
-    else if (acc == "free")
+    else if (acc == "free") // Porth++
         tt = TokenType::FREE;
+    else if (acc == "new") // Porth++
+        tt = TokenType::NEW;
     else if (acc == "cast(int)" || acc == "cast(bool)" || acc == "cast(ptr)" 
         || acc == "and" || acc == "or" || acc == "not" || acc == "shr" || acc == "shl" 
         || acc == "idivmod" || acc == "divmod")

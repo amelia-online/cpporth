@@ -13,6 +13,8 @@ std::string Type::toString()
             return "(PtrType)";
         case TypeKind::ADDR:
             return "(AddrType)";
+        case TypeKind::VARIANT:
+            return "(VariantType)";
     }
 }
 
@@ -553,6 +555,42 @@ std::string VariantBinding::toString()
 ASTKind VariantBinding::getASTKind()
 {
     return ASTKind::VARIANTBINDING;
+}
+
+VariantInstanceExpr::VariantInstanceExpr(std::string name, std::string parentName, std::vector<std::vector<Expr *> > args) :
+    variant(name), parent(parentName), args(args) {;}
+VariantInstanceExpr::~VariantInstanceExpr()
+{
+    for (auto a : args)
+        for (auto e : a)
+            delete e;
+}
+std::string VariantInstanceExpr::toString()
+{
+    std::string acc = "(Variant " + parent + "::" + variant + " ";
+
+    int expc = 0;
+    int argc = 0;
+    for (auto a : args)
+    {
+        expc = 0;
+        acc += "(";
+        for (auto e : a)
+        {
+            acc += e->toString() + (expc < a.size()-1 ? " " : "");
+            expc++;
+        }
+        acc += ")";
+        if (argc < args.size()-1)
+            acc += " ";
+        argc++;
+    }
+    acc += ")";
+    return acc;
+}
+ASTKind VariantInstanceExpr::getASTKind()
+{
+    return ASTKind::VARIANTINSTANCEEXPR;
 }
 
 ArrayLitExpr::ArrayLitExpr(std::vector<std::vector<Expr*> > items) : items(items) {;}
