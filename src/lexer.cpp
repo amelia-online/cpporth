@@ -28,11 +28,7 @@ std::vector<Token> Lexer::lex()
     while (index < input.length())
     {
         char ch = peek();
-
-        //debug();
-        //for (Token t : tokens)
-        //    std::cout << t.toString() << std::endl;
-
+        
         if (ch == '\n')
         {
             if (tokens.size() == 0 || tokens.back().type != TokenType::NEWLINE)
@@ -48,6 +44,36 @@ std::vector<Token> Lexer::lex()
         if (ch == ' ')
         {
             index++;
+            continue;
+        }
+
+        if (ch == ':')
+        {
+            tokens.push_back(Token(index, ++index, this->line, TokenType::COLON, ":"));
+            continue;
+        }
+
+        if (ch == '|')
+        {
+            tokens.push_back(Token(index, ++index, this->line, TokenType::LINE, "|"));
+            continue;
+        }
+
+        if (ch == '[')
+        {
+            tokens.push_back(Token(index, ++index, this->line, TokenType::LSQUARE, "["));
+            continue;
+        }
+
+        if (ch == ']')
+        {
+            tokens.push_back(Token(index, ++index, this->line, TokenType::RSQUARE, "]"));
+            continue;
+        }
+
+        if (ch == ',')
+        {
+            tokens.push_back(Token(index, ++index, this->line, TokenType::COMMA, ","));
             continue;
         }
 
@@ -310,8 +336,16 @@ Token Lexer::lexKeyword()
         tt = TokenType::CALLLIKE;
     else if (acc == "addr")
         tt = TokenType::ADDR;
+    else if (acc == "match") // Porth++ Language Ext.
+        tt = TokenType::MATCH;
+    else if (acc == "type") // Porth++ Language Ext.
+        tt = TokenType::TYPE;
     else if (acc == "max")
         tt = TokenType::MAX;
+    else if (acc == "alloc")
+        tt = TokenType::ALLOC;
+    else if (acc == "free")
+        tt = TokenType::FREE;
     else if (acc == "cast(int)" || acc == "cast(bool)" || acc == "cast(ptr)" 
         || acc == "and" || acc == "or" || acc == "not" || acc == "shr" || acc == "shl" 
         || acc == "idivmod" || acc == "divmod")

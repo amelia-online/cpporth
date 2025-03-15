@@ -419,6 +419,23 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                 break;
             }
 
+            case ASTKind::ALLOCSTMT:
+            {
+                auto a = (AllocExpr *)exp;
+                long size = stack.pop().getValue();
+                unsigned char *m = new unsigned char[size]();
+                stack.push(m);
+                break;
+            }
+
+            case ASTKind::FREEEXPR:
+            {
+                auto top = stack.pop();
+                auto ptr = (unsigned char *)top.getValue();
+                delete[] ptr;
+                break;
+            }
+
             case ASTKind::VAREXPR:
             {
                 VarExpr *v = (VarExpr *)exp;

@@ -27,6 +27,9 @@ public:
     AddrOfExpr *parseAddrOf();
     CallLikeExpr *parseCallLike();
     IncludeCmd *parseInclude();
+    TypeCmd *parseTypeCmd();
+    ArrayLitExpr *parseArrayLit();
+    MatchExpr *parseMatch();
     std::vector<Expr *> parseExpr();
     Type parseType();
     FnSignature parseSignature();

@@ -1,5 +1,6 @@
 #include "helper.h"
-
+#include "lexer.h"
+#include "parser.h"
 #include <fstream>
 #include <iostream>
 
@@ -90,4 +91,11 @@ char realChar(std::string s)
     if (s == "'\\''")
         return '\'';
     return s[1];
+}
+
+std::vector<AST*> toASTs(std::string path)
+{
+    Lexer l(openFile(realString(path)));
+    Parser p(l.lex());
+    return p.parse();
 }

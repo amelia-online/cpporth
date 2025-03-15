@@ -16,6 +16,12 @@ std::string Type::toString()
     }
 }
 
+VariantType::VariantType(std::string name) : name(name), Type(TypeKind::VARIANT) {;}
+std::string VariantType::toString()
+{
+    return "(VariantType " + name + ")";
+}
+
 MemoryExpr::MemoryExpr(std::string name, std::vector<Expr*> body) : ident(name), body(body) {;}
 
 MemoryExpr::MemoryExpr(MemoryExpr *other)
@@ -232,6 +238,8 @@ ASTKind VarExpr::getASTKind()
 {
     return ASTKind::VAREXPR;
 }
+
+
 
 IfExpr::IfExpr(std::vector<Expr *> then, std::vector<Expr*> elze, IfExpr *next) : then(then), elze(elze), next(next) {;}
 IfExpr::~IfExpr()
@@ -509,6 +517,81 @@ ASTKind MaxExpr::getASTKind()
     return ASTKind::MAXEXPR;
 }
 
+AllocExpr::AllocExpr() {;}
+AllocExpr::~AllocExpr() {;}
+std::string AllocExpr::toString()
+{
+   return "(AllocExpr alloc)";
+}
+ASTKind AllocExpr::getASTKind()
+{
+    return ASTKind::ALLOCSTMT;
+}
+
+FreeExpr::FreeExpr() {;}
+FreeExpr::~FreeExpr() {;}
+std::string FreeExpr::toString()
+{
+    return "(FreeExpr free)";
+}
+ASTKind FreeExpr::getASTKind()
+{
+    return ASTKind::FREEEXPR;
+}
+
+VariantBinding::VariantBinding(std::vector<std::string> idents, std::vector<Expr*> body) :
+    idents(idents), body(body) {;}
+VariantBinding::~VariantBinding()
+{
+    for (auto e : body)
+        delete e;
+}
+std::string VariantBinding::toString()
+{
+    return "(MatchExpr case)";
+}
+ASTKind VariantBinding::getASTKind()
+{
+    return ASTKind::VARIANTBINDING;
+}
+
+ArrayLitExpr::ArrayLitExpr(std::vector<std::vector<Expr*> > items) : items(items) {;}
+ArrayLitExpr::~ArrayLitExpr()
+{
+    for (auto i : items)
+        for (auto e : i)
+            delete e;
+}
+
+std::string ArrayLitExpr::toString()
+{
+    std::string acc = "(ArrayLitExpr ";
+
+    int i = 0;
+    int j = 0;
+    for (auto item : items)
+    {
+        acc += "(";
+        i = 0;
+        for (auto e : item)
+        {
+            acc += e->toString() + (i < item.size()-1 ? " " : "");
+            i++;
+        }
+        acc += ")";
+        if (j < items.size()-1)
+            acc += " ";
+        j++;    
+    }
+    acc += ")";
+    return acc;
+}
+
+ASTKind ArrayLitExpr::getASTKind()
+{
+    return ASTKind::ARRAYLITEXPR;
+}
+
 IncludeCmd::IncludeCmd(std::string path) : path(path) {;}
 IncludeCmd::~IncludeCmd() {}
 std::string IncludeCmd::toString()
@@ -637,3 +720,47 @@ MemoryExpr *MemoryCmd::toMemoryExpr()
 {
     return new MemoryExpr(ident, body);
 }
+
+Field::Field(std::string name, Type type) : name(name), type(type) {;}
+std::string Field::toString()
+{
+    return "(" + name + " :: " + type.toString() + ")";
+}
+
+Variant::Variant(std::string name, std::string parentName, std::vector<Field> fields) :
+    name(name), parentName(parentName), fields(fields) {;}
+std::string Variant::toString()
+{
+    std::string acc = "(" + parentName + "::" + name + " ";
+
+    int i = 0;
+    for (auto field : fields)
+    {
+        acc += field.toString() + (i < fields.size()-1 ? " " : "");
+        i++;
+    }
+    acc += ")";
+    return acc;
+}
+
+TypeCmd::TypeCmd(std::string name, std::vector<Variant> variants) :
+    name(name), variants(variants) {;}
+TypeCmd::~TypeCmd() {;}
+std::string TypeCmd::toString()
+{
+    std::string acc = "(" + name + " ";
+
+    int i = 0;
+    for (auto variant : variants)
+    {
+        acc += variant.toString() + (i < variants.size()-1 ? " " : "");
+        i++;
+    }
+    acc += ")";
+    return acc;
+}
+ASTKind TypeCmd::getASTKind()
+{
+    return ASTKind::TYPECMD;
+}
+

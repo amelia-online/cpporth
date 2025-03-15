@@ -215,7 +215,8 @@ std::vector<Expr *> Parser::parseExpr()
         TokenType::SYSCALLN, TokenType::NEWLINE, TokenType::PEEK,
         TokenType::WHILE, TokenType::IF, TokenType::LET, TokenType::OFFSET,
         TokenType::RESET, TokenType::MEMORY, TokenType::ASSERT, 
-        TokenType::ADDROF, TokenType::CALLLIKE,
+        TokenType::ADDROF, TokenType::CALLLIKE, TokenType::FREE,
+        TokenType::ALLOC,
     };
 
     while (std::find(allowed.begin(), allowed.end(), t.type) != allowed.end())
@@ -238,6 +239,20 @@ std::vector<Expr *> Parser::parseExpr()
             case TokenType::CHAR:
             {
                 subexps.push_back(new CharExpr(realChar(t.content)));
+                break;
+            }
+            case TokenType::ALLOC:
+            {
+                auto a = new AllocExpr();
+                a->line = t.line;
+                subexps.push_back(a);
+                break;
+            }
+            case TokenType::FREE:
+            {
+                auto f = new FreeExpr();
+                f->line = t.line;
+                subexps.push_back(f);
                 break;
             }
             case TokenType::OFFSET:
@@ -420,6 +435,11 @@ std::vector<Expr *> Parser::parseExpr()
     return subexps;
 }
 
+TypeCmd *Parser::parseTypeCmd()
+{
+    return nullptr;
+}
+
 ConstCmd *Parser::parseConst()
 {
     index++;
@@ -537,6 +557,13 @@ std::vector<AST*> Parser::parse()
                 asts.push_back(e);
                 break;
             }   
+            case TokenType::TYPE:
+            {
+                auto t = parseTypeCmd();
+                t->line = token.line;
+                asts.push_back(t);
+                break;
+            }
             case TokenType::INCLUDE:
             {
                 auto e = parseInclude();

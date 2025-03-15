@@ -2,13 +2,15 @@
 #define CPPORTH_AST_H
 
 #include <string>
+#include <unordered_map>
 
 enum class TypeKind
 {
     INT,
     BOOL,
     PTR,
-    ADDR
+    ADDR,
+    VARIANT,
 };
 
 enum class ASTKind
@@ -44,6 +46,13 @@ enum class ASTKind
     ADDROFEXPR,
     ASSERTCMD,
     CALLLIKEEXPR,
+    ALLOCSTMT,
+    FREEEXPR,
+    TYPECMD,
+    MATCHSTMT,
+    VARIANTINSTANCEEXPR,
+    VARIANTBINDING,
+    ARRAYLITEXPR
 };
 
 class AST 
@@ -71,6 +80,14 @@ public:
     std::string toString();
 };
 
+class VariantType : public Type
+{
+public:
+    std::string name;
+    VariantType(std::string);
+    std::string toString();
+};
+
 class Expr : public AST 
 {
 public:
@@ -86,6 +103,36 @@ public:
     std::vector<Expr*> body;
     AssertCmd(std::string, std::vector<Expr*>);
     ~AssertCmd();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class Field
+{   
+public:
+    std::string name;
+    Type type;
+    Field(std::string, Type);
+    std::string toString();
+};
+
+class Variant
+{
+public:
+    std::string name;
+    std::string parentName;
+    std::vector<Field> fields;
+    Variant(std::string, std::string, std::vector<Field>);
+    std::string toString();
+};
+
+class TypeCmd : public Cmd
+{
+public:
+    std::string name;
+    std::vector<Variant> variants;
+    TypeCmd(std::string, std::vector<Variant>);
+    ~TypeCmd();
     std::string toString() override;
     ASTKind getASTKind() override;
 };
@@ -142,6 +189,65 @@ public:
     std::string name;
     VarExpr(std::string);
     std::string getName();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class AllocExpr: public Expr
+{
+public:
+    AllocExpr();
+    ~AllocExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class FreeExpr: public Expr
+{
+public:
+    FreeExpr();
+    ~FreeExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+/*
+class VariantInstanceExpr : public Expr
+{
+public:
+    std::string parent;
+    std::string variant;
+    // todo
+};
+*/
+
+class VariantBinding : public Expr
+{
+public:
+    std::vector<std::string> idents;
+    std::vector<Expr *> body;
+    VariantBinding(std::vector<std::string>, std::vector<Expr*>);
+    ~VariantBinding();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};  
+
+class MatchExpr : public Expr
+{
+public:
+    std::unordered_map<std::string, VariantBinding*> branches;
+    MatchExpr(std::unordered_map<std::string, VariantBinding*>);
+    ~MatchExpr();
+    std::string toString() override;
+    ASTKind getASTKind() override;
+};
+
+class ArrayLitExpr : public Expr
+{
+public:
+    std::vector<std::vector<Expr*> > items;
+    ArrayLitExpr(std::vector<std::vector<Expr*> >);
+    ~ArrayLitExpr();
     std::string toString() override;
     ASTKind getASTKind() override;
 };
