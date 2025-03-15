@@ -557,6 +557,40 @@ ASTKind VariantBinding::getASTKind()
     return ASTKind::VARIANTBINDING;
 }
 
+MatchExpr::MatchExpr(std::unordered_map<std::string, VariantBinding*> map) :
+    branches(map) {;}
+MatchExpr::~MatchExpr()
+{
+    for (auto [name, binding] : branches)
+        delete binding;
+}
+std::string MatchExpr::toString()
+{
+    std::string acc = "(MatchExpr ";
+
+    int i = 0;
+    for (auto [name, binding] : branches)
+    {
+        int ec = 0;
+        acc += "(" + name + " (";
+        for (auto e : binding->body)
+        {
+            acc += e->toString() + (ec < binding->body.size()-1 ? " " : "");
+            ec++;
+        }
+        acc += "))";
+        if (i < branches.size()-1)
+            acc += " ";
+        i++;
+    }
+    acc += ")";
+    return acc;
+}
+ASTKind MatchExpr::getASTKind()
+{
+    return ASTKind::MATCHSTMT;
+}
+
 VariantInstanceExpr::VariantInstanceExpr(std::string name, std::string parentName, std::vector<std::vector<Expr *> > args) :
     variant(name), parent(parentName), args(args) {;}
 VariantInstanceExpr::~VariantInstanceExpr()

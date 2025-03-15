@@ -552,6 +552,51 @@ VariantInstanceExpr *Parser::parseNew()
     return new VariantInstanceExpr(name, parent, args);
 }
 
+VariantBinding *Parser::parseMatchBranch(std::unordered_map<std::string, VariantBinding*>& map)
+{
+    check(peek(), TokenType::VAR);
+    std::string name = pop().content;
+    std::vector<std::string> idents;
+    check(pop(), TokenType::LSQUARE);
+
+    bool isIdent = true;
+    while (index < input.size())
+    {
+        auto token = peek();
+
+        if (token.type == TokenType::RSQUARE)
+            break;
+            
+        if (token.type == TokenType::NEWLINE)
+        {
+            index++;
+            continue;
+        }
+
+        if (isIdent)
+        {
+            check(token, TokenType::VAR);
+            idents.push_back(token.content);
+            index++;
+            isIdent = false;
+            continue;
+        }
+        else if (token.type == TokenType::COMMA)
+        {
+            isIdent = true;
+            index++;
+            continue;
+        }
+        else throw new std::exception();
+    }
+    index++;
+    check(pop(), TokenType::COLON);
+    auto body = parseExpr();
+    auto vb = new VariantBinding(idents, body);
+    map.insert(std::make_pair(name, vb));
+    return vb;
+}
+
 MatchExpr *Parser::parseMatch()
 {
     index++;
@@ -572,7 +617,9 @@ MatchExpr *Parser::parseMatch()
 
         if (isBranch)
         {
-            // todo...
+            parseMatchBranch(map);
+            isBranch = false;
+            continue;
         }
         else if (token.type == TokenType::LINE)
         {
@@ -581,9 +628,9 @@ MatchExpr *Parser::parseMatch()
             continue;
         }
         else throw new std::exception();
-        
     }
-
+    index++;
+    return new MatchExpr(map);
 }
 
 TypeCmd *Parser::parseTypeCmd()

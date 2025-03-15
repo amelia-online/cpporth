@@ -30,6 +30,7 @@ public:
     TypeCmd *parseTypeCmd();
     Variant parseVariant(std::string);
     Field parseField();
+    VariantBinding *parseMatchBranch(std::unordered_map<std::string, VariantBinding*>&);
     ArrayLitExpr *parseArrayLit();
     MatchExpr *parseMatch();
     VariantInstanceExpr *parseNew();
