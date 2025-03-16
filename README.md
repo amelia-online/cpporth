@@ -70,5 +70,33 @@ On top of the Porth language I am adding new features that are optional. I am ca
   - Notice how the pointer created in `make-array` is not automatically freed once `make-array` returns.
 
  * `type` and `match`
-   - TODO
+   - `type` allows you to define a type and any of its forms.
+   - you create an instance of that type using `new`: `new <ParentType>::<VariantName>[<Values>, ...]`.
+   - this puts a pointer to the instance on the stack.
+   - `match` works with pointers to variants. It uses the variant's type to execute a certain block of code with that instance's data.
+   - ex.
+   ```ruby
+    include "porth/std/std.porth"
+
+    type T
+    | a[n :: int, n2 :: ptr]
+    | b[n :: bool]
+    end
+
+    proc main in
+        new T::b[false]
+        match
+        | a[b, c]:
+            b print
+        | b[n]:
+            n true = if
+                "true\n" puts
+            else
+                "false\n" puts
+            end
+        end
+    end
+   ```
+
+   Output: `false`
 
