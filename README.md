@@ -44,4 +44,31 @@ This will bring us back to the main project directory and build and run the test
 ## Unsupported Features
 
 * `call-like`: because I have no idea what it does, and there is little to no documentation on it.
+---
+## Porth++ Language Extension
+On top of the Porth language I am adding new features that are optional. I am callimg this set of features **Porth++**
+
+* `alloc` and `free`
+  - these two features allow you to dynamically allocate memory on the heap that will live until freed.
+  - ex.
+  ```ruby
+  include "porth/std/std.porth"
+
+  proc make-array int -- ptr in
+      let size in
+          size sizeof(u64) * alloc
+      end
+  end
+
+  proc main in
+      12 make-array
+      let pointer in
+          pointer free
+      end
+  end
+  ```
+  - Notice how the pointer created in `make-array` is not automatically freed once `make-array` returns.
+
+ * `type` and `match`
+   - TODO
 
