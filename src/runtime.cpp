@@ -11,7 +11,7 @@ Env::Env(int argc, char** argv)
     variables.insert(std::make_pair("argc", Data(argc, TypeKind::INT)));
 
     variables.insert(std::make_pair("argv", Data((long)argv, TypeKind::PTR)));
-    filepath = argv[1];
+    filepath = argv[0];
     
 }
 
@@ -302,8 +302,9 @@ void include(std::string path, Env& env)
                     break;
 
                 Env e2(env);
+                e2.setPath(ic->path);
                 e2.filepath = realString(ic->path);
-                include(realString(e2.path + ic->path), e2);
+                include(realString(env.path + ic->path), e2);
                 env += e2;
                 break;
             }

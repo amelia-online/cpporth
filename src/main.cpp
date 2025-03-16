@@ -4,6 +4,7 @@
 #include "helper.h"
 #include "parser.h"
 #include "runtime.h"
+#include "args.h"
 //#include "typechecker.h"
 
 int main(int argc, char **argv)
@@ -14,8 +15,8 @@ int main(int argc, char **argv)
         exit(0);
     }
     
-
-    auto txt = openFile(argv[1]);
+    Args args(argc, argv);
+    auto txt = openFile(args.filepath);
 
     Lexer lexer(txt);
     std::vector<Token> tokens = lexer.lex();
@@ -27,10 +28,10 @@ int main(int argc, char **argv)
     std::vector<AST*> asts = parser.parse();
         //for (AST *ast : asts)
         //    std::cout << ast->toString() << std::endl;
-    auto args = new char*[argc];
-    for (int i = 0; i < argc; i++) {
-        args[i] = new char[std::strlen(argv[i])+1];
-        std::strncpy(args[i], argv[i], std::strlen(argv[i])+1);
+    auto pargs = new char*[args.porthArgs.size()];
+    for (int i = 0; i < args.porthArgs.size(); i++) {
+        pargs[i] = new char[args.porthArgs[i].size()+1];
+        std::strncpy(pargs[i], args.porthArgs[i].c_str(), args.porthArgs[i].size()+1);
     }
 
     // TypeEnv tenv;
@@ -38,12 +39,12 @@ int main(int argc, char **argv)
     // typecheck(asts, tstack, tenv);
     
     Stack s;
-    Env e(argc, args);
+    Env e(args.porthArgs.size(), pargs);
     interp(asts, s, e);
 
-    for (int i = 0; i < argc; i++)
-        delete[] args[i];
-    delete[] args;
+    for (int i = 0; i < args.porthArgs.size(); i++)
+        delete[] pargs[i];
+    delete[] pargs;
 
     parser.cleanup(asts);
 
