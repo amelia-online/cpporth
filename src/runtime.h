@@ -27,6 +27,7 @@ class Env
 public:
     std::unordered_map<std::string, Data> variables;
     std::unordered_map<std::string, ProcCmd*> procs;
+    std::unordered_map<std::string, TypeCmd*> types;
     std::vector<unsigned char *> toClean;
     std::vector<std::string> included;
     int offset = 0;
@@ -67,6 +68,15 @@ public:
     Stack scope(const ProcCmd*);
     int size();
     std::string toString();
+};
+
+class VariantData
+{
+public:
+    std::string name;
+    std::string parent;
+    std::vector<Data> values;
+    VariantData(std::string, std::string, std::vector<Data>);
 };
 
 std::vector<AST*> toAstVec(std::vector<Expr*>);

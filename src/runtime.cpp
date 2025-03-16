@@ -20,6 +20,7 @@ Env::Env(const Env& other)
     variables = std::unordered_map<std::string, Data>(other.variables);
     procs = std::unordered_map<std::string, ProcCmd*>(other.procs);
     included = std::vector<std::string>(other.included);
+    types = std::unordered_map<std::string, TypeCmd*>(other.types);
     offset = other.offset;
     filepath = other.filepath;
     path = other.path;
@@ -54,6 +55,7 @@ Env& Env::operator=(Env other)
     std::swap(procs, other.procs);
     std::swap(offset, other.offset);
     std::swap(filepath, other.filepath);
+    std::swap(types, other.types);
     return *this;
 }
 
@@ -62,6 +64,7 @@ Env& Env::operator+=(Env other)
     std::swap(variables, other.variables);
     std::swap(procs, other.procs);
     std::swap(included, other.included);
+    std::swap(types, other.types);
     return *this;
 }
 
@@ -260,6 +263,9 @@ std::vector<AST*> toAstVec(std::vector<Expr*> exprs)
     return res;
 }
 
+VariantData::VariantData(std::string name, std::string parent, std::vector<Data> data) :
+    name(name), parent(parent), values(data) {;}
+
 void include(std::string path, Env& env)
 {
     std::string contents = openFile(path);
@@ -309,6 +315,12 @@ void include(std::string path, Env& env)
                 long size = interpExpr(memcmd->body, s, env).getValue();
                 unsigned char *m = new unsigned char[size]();
                 env.variables.insert(std::make_pair(memcmd->ident, Data((long)m, TypeKind::PTR)));
+                break;
+            }
+            case ASTKind::TYPECMD:
+            {
+                auto type = (TypeCmd*)ast;
+                env.types.insert(std::make_pair(type->name, type));
                 break;
             }
             case ASTKind::ASSERTCMD:
@@ -368,6 +380,12 @@ Data interp(std::vector<AST*> prog, Stack& stack, Env& env)
                 env += e2;
                 break;
             }
+            case ASTKind::TYPECMD:
+            {
+                auto type = (TypeCmd*)ast;
+                env.types.insert(std::make_pair(type->name, type));
+                break;
+            }
             case ASTKind::MEMORYCMD:
             {
                 auto memcmd = (MemoryCmd *)ast;
@@ -425,6 +443,42 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                 long size = stack.pop().getValue();
                 unsigned char *m = new unsigned char[size]();
                 stack.push(m);
+                break;
+            }
+
+            case ASTKind::MATCHSTMT:
+            {
+                auto m = (MatchExpr *)exp;
+                VariantData *v = (VariantData *)stack.pop().getValue();
+
+                auto branch = m->branches.at(v->name);
+
+                for (int i = 0; i < branch->idents.size(); i++)
+                    env.variables.insert(std::make_pair(branch->idents[i], v->values[i]));
+                
+                interpExpr(branch->body, stack, env);
+
+                for (auto ident : branch->idents)
+                    env.variables.erase(ident);
+
+                break;
+            }
+
+            case ASTKind::VARIANTINSTANCEEXPR:
+            {
+                auto n = (VariantInstanceExpr *)exp;
+                Stack s;
+            
+                std::vector<Data> data;
+                for (auto arg : n->args)
+                {
+                    data.push_back(interpExpr(arg, s, env));
+                    s.clear();
+                }
+
+                auto res = new VariantData(n->variant, n->parent, data);
+                stack.push(res);
+
                 break;
             }
 
