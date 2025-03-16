@@ -74,6 +74,7 @@ On top of the Porth language I am adding new features that are optional. I am ca
    - you create an instance of that type using `new`: `new <ParentType>::<VariantName>[<Values>, ...]`.
    - this puts a pointer to the instance on the stack.
    - `match` works with pointers to variants. It uses the variant's type to execute a certain block of code with that instance's data.
+   - `type` and `match` are heavily inspired by the same constructs in [Matthew Flatt's Shplait Language](https://github.com/mflatt/shplait).
    - ex.
    ```ruby
     include "porth/std/std.porth"
