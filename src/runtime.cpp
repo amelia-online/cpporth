@@ -452,7 +452,8 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                 auto m = (MatchExpr *)exp;
                 VariantData *v = (VariantData *)stack.pop().getValue();
 
-                auto branch = m->branches.at(v->name);
+                auto branch = m->branches.find(v->name) != m->branches.end() ? 
+                    m->branches.at(v->name) : m->branches.at("else");
 
                 for (int i = 0; i < branch->idents.size(); i++)
                     env.variables.insert(std::make_pair(branch->idents[i], v->values[i]));

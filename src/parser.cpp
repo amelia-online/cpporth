@@ -554,6 +554,16 @@ VariantInstanceExpr *Parser::parseNew()
 
 VariantBinding *Parser::parseMatchBranch(std::unordered_map<std::string, VariantBinding*>& map)
 {
+    if (peek().type == TokenType::ELSE)
+    {
+        index++;
+        check(pop(), TokenType::COLON);
+        auto body = parseExpr();
+        auto vb = new VariantBinding({}, body);
+        map.insert(std::make_pair("else", vb));
+        return vb;
+    }
+
     check(peek(), TokenType::VAR);
     std::string name = pop().content;
     std::vector<std::string> idents;
