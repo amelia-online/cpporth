@@ -101,3 +101,25 @@ On top of the Porth language I am adding new features that are optional. I am ca
 
    Output: `false`
 
+* If your type has many different variants but you don't want to match over all of them, you can use `else`:
+```ruby
+include "porth/std/std.porth"
+
+type T
+| a[n :: int]
+| b[bln :: bool]
+| c[p :: ptr]
+end
+
+proc main in
+    new T::b[true]
+    match
+    | a[n]:
+        n print
+    | else:
+        "else branch\n" puts
+    end
+end
+```
+
+Output: `else branch`
