@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <cstring>
 #include "lexer.h"
 #include "helper.h"
 #include "parser.h"
@@ -41,10 +42,6 @@ int main(int argc, char **argv)
     Stack s;
     Env e(args.porthArgs.size(), pargs);
     interp(asts, s, e);
-
-    for (int i = 0; i < args.porthArgs.size(); i++)
-        delete[] pargs[i];
-    delete[] pargs;
 
     parser.cleanup(asts);
 

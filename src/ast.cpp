@@ -557,8 +557,8 @@ ASTKind VariantBinding::getASTKind()
     return ASTKind::VARIANTBINDING;
 }
 
-MatchExpr::MatchExpr(std::unordered_map<std::string, VariantBinding*> map) :
-    branches(map) {;}
+MatchExpr::MatchExpr(std::unordered_map<std::string, VariantBinding*> map, std::string supertype) :
+    branches(map), supertype(supertype) {;}
 MatchExpr::~MatchExpr()
 {
     for (auto [name, binding] : branches)
@@ -566,7 +566,7 @@ MatchExpr::~MatchExpr()
 }
 std::string MatchExpr::toString()
 {
-    std::string acc = "(MatchExpr ";
+    std::string acc = "(MatchExpr " + supertype + " ";
 
     int i = 0;
     for (auto [name, binding] : branches)

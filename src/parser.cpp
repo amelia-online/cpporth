@@ -611,6 +611,10 @@ MatchExpr *Parser::parseMatch()
 {
     index++;
     std::unordered_map<std::string, VariantBinding*> map;
+    std::string supertype;
+
+    check(peek(), TokenType::VAR);
+    supertype = pop().content;
 
     bool isBranch = false;
     while (index < input.size())
@@ -640,7 +644,7 @@ MatchExpr *Parser::parseMatch()
         else throw new std::exception();
     }
     index++;
-    return new MatchExpr(map);
+    return new MatchExpr(map, supertype);
 }
 
 TypeCmd *Parser::parseTypeCmd()

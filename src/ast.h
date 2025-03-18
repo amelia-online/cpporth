@@ -238,7 +238,8 @@ class MatchExpr : public Expr
 {
 public:
     std::unordered_map<std::string, VariantBinding*> branches;
-    MatchExpr(std::unordered_map<std::string, VariantBinding*>);
+    std::string supertype;
+    MatchExpr(std::unordered_map<std::string, VariantBinding*>, std::string);
     ~MatchExpr();
     std::string toString() override;
     ASTKind getASTKind() override;
