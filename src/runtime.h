@@ -30,6 +30,7 @@ public:
     std::unordered_map<std::string, TypeCmd*> types;
     std::vector<unsigned char *> toClean;
     std::vector<std::string> included;
+    std::unordered_map<std::string, char*> strings;
     int offset = 0;
     std::string filepath;
     std::string path;

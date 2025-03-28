@@ -12,7 +12,6 @@ long syscall(int syscallnum, std::vector<long> args)
             const char *buf = (const char *)(args[1]);
             size_t count = (size_t)args[2];
             auto res = write(fd, buf, count);
-            delete buf;
             return (long)res;
         }
 

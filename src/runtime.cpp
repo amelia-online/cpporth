@@ -21,6 +21,7 @@ Env::Env(const Env& other)
     procs = std::unordered_map<std::string, ProcCmd*>(other.procs);
     included = std::vector<std::string>(other.included);
     types = std::unordered_map<std::string, TypeCmd*>(other.types);
+    strings = std::unordered_map<std::string, char*>(other.strings);
     offset = other.offset;
     filepath = other.filepath;
     path = other.path;
@@ -56,6 +57,7 @@ Env& Env::operator=(Env other)
     std::swap(offset, other.offset);
     std::swap(filepath, other.filepath);
     std::swap(types, other.types);
+    std::swap(strings, other.strings);
     return *this;
 }
 
@@ -583,9 +585,18 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                 int len = str.length();
                 if (!s->isCStr())
                     stack.push((long)len);
+
+                if (env.strings.find(str) != env.strings.end())
+                {
+                    auto p = env.strings.at(str);
+                    stack.push(p);
+                    break;
+                }
+
                 char *ptr = new char[len];
                 std::strncpy(ptr, str.data(), len);
                 stack.push(ptr);
+                env.strings.insert(std::make_pair(str, ptr));
                 break;
             }
 
@@ -667,7 +678,10 @@ Data interpExpr(std::vector<Expr*> exps, Stack& stack, Env& env)
                 auto let = (LetExpr *)exp;
                 //stack.assertMinSize(let->idents.size(), let->line);
                 for (int i = let->idents.size()-1; i >= 0; i--)
-                    env.variables.insert(std::make_pair(let->idents[i], stack.pop()));
+                    if (let->idents[i] == "_")
+                        stack.pop();
+                    else
+                        env.variables.insert(std::make_pair(let->idents[i], stack.pop()));
                 
                 interpExpr(let->body, stack, env);
 
