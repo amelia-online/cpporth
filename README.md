@@ -86,7 +86,7 @@ On top of the Porth language I am adding new features that are optional. I am ca
 
     proc main in
         new T::b[false]
-        match
+        match T
         | a[b, c]:
             b print
         | b[n]:
@@ -113,7 +113,7 @@ end
 
 proc main in
     new T::b[true]
-    match
+    match T
     | a[n]:
         n print
     | else:
