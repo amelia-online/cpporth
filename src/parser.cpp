@@ -103,7 +103,7 @@ LetExpr *Parser::parseLet()
             idents.push_back(t.content);
         else if (t.type == TokenType::NEWLINE)
             continue;
-        else error("Error: expected identifer.");
+        else error("ParseError:" + std::to_string(t.line) + " expected identifer.");
     }
 
     index++;
