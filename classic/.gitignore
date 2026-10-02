@@ -1,0 +1,13 @@
+.vscode
+*.o
+*.txt
+cpporth
+cpporthtests
+src/test.txt
+*.porth
+porth
+googletest
+.DS_Store
+googletest/
+porth/
+*.dSYM
