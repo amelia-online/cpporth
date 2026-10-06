@@ -23,9 +23,12 @@ namespace cpporth
 
     /// @brief Like an iterator.
     std::optional<char> next ();
+    // Like next () but fails if EOF hit.
+    char assert_next ();
 
     std::optional<Token> to_token (const boost::regex &, const boost::regex &,
                                    TokenType);
+    std::optional<Token> to_token (const boost::regex &, const boost::regex &);
 
     /// @brief Useful for tokens that share characters, ex. identifiers and
     /// keywords
@@ -34,6 +37,7 @@ namespace cpporth
     Token collect (const boost::regex &);
 
     Token lex_string ();
+    Token lex_char ();
 
     /// @brief Check if the next character (if it exists) is a newline.
     /// @return true if it's a newline, false otherwise.

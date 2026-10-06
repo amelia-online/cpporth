@@ -5,8 +5,10 @@
 int
 main ()
 {
-  std::string input = "include \"porth/std/std.porth\"\n"
-                      "proc main in\n    \"Hello, world!\" puts\n end\n";
+  std::string input = "include \"std/porth.std\"\n"
+                      "proc main in\n"
+                      "   \'a\' \'\\a\'\n"
+                      "end\n";
 
   cpporth::Lexer l;
 

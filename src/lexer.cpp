@@ -32,6 +32,15 @@ Lexer::next ()
   return data.at (static_cast<std::size_t> (index));
 }
 
+char
+Lexer::assert_next ()
+{
+  index += 1;
+  if (static_cast<std::int64_t> (data.length ()) <= index)
+    throw std::out_of_range ("TODO: EOF hit unexpectedly.");
+  return data.at (static_cast<std::size_t> (index));
+}
+
 std::optional<char>
 Lexer::peek ()
 {
@@ -110,6 +119,25 @@ Lexer::to_token (const boost::regex &allowed_chars, const boost::regex &pat,
   return {};
 }
 
+std::optional<Token>
+Lexer::to_token (const boost::regex &allowed, const boost::regex &pat)
+{
+  auto token = collect (allowed);
+  if (boost::regex_match (token.string_value, pat))
+    {
+      const auto tokentype_opt = string_to_tokentype (token.string_value);
+      if (tokentype_opt.has_value ())
+        {
+          token.token_type = *tokentype_opt;
+          return token;
+        }
+      else
+        return {};
+    }
+  else
+    return {};
+}
+
 std::optional<char>
 Lexer::prev ()
 {
@@ -128,11 +156,12 @@ Lexer::lex_string ()
   while (!exit)
     {
       if (peek_newline ())
-        throw std::invalid_argument ("Newline encountered in string.");
+        throw std::invalid_argument (
+            "TODO: Newline encountered in string error.");
 
       auto opt = next ();
       if (!opt)
-        throw std::out_of_range ("Encountered EOF in a string.");
+        throw std::out_of_range ("TODO: Encountered EOF in a string error.");
 
       if (*opt == '\"')
         {
@@ -147,8 +176,36 @@ Lexer::lex_string ()
 
       buf.push_back (*opt);
     }
+  TokenType tt = TokenType::StringLit;
+  if (peek ().has_value () && *peek () == 'c')
+    {
+      tt = TokenType::CStrLit;
+      buf.push_back (*next ());
+    }
+
   std::size_t end = index;
-  return Token{ TokenType::StringLit, buf, start, end };
+  return Token{ tt, buf, start, end };
+}
+
+Token
+Lexer::lex_char ()
+{
+  size_t start = index + 1;
+  std::string buf;
+
+  buf.push_back (*next ()); // '
+  const auto ch = assert_next ();
+  buf.push_back (ch);
+  if (ch == '\\')
+    buf.push_back (assert_next ());
+  const auto end = assert_next ();
+
+  if (end != '\'')
+    throw std::invalid_argument ("TODO: expected \' error");
+
+  buf.push_back (end);
+
+  return Token{ TokenType::CharLit, buf, start, static_cast<size_t> (index) };
 }
 
 std::vector<Token>
@@ -193,7 +250,8 @@ Lexer::lex ()
           static const boost::regex keyword_pat (
               "^(?:var|while|proc|in|let|memory|dup|swap|drop|rot|over|do|if|"
               "if\\*|else|end|const|reset|offset|assert|here|include|inline|"
-              "addr|addr-of|call-like|peek|syscall[0-6])$");
+              "addr|addr-of|call-like|peek|syscall[0-6]|not|and|or|shl|shr|"
+              "divmod|max|print|cast\\(bool\\)|cast\\(int\\)|cast\\(ptr\\))$");
           // Now I have to map each keyword string to each keyword enum value
           // :(
           auto almost_token = collect (allowed_ident_chars);
@@ -207,9 +265,21 @@ Lexer::lex ()
             almost_token.token_type = TokenType::Identifier;
           tokens.push_back (almost_token);
         }
+      else if (char_in (ch, "[\\+\\*=!><-@]"))
+        {
+          static const boost::regex allowed_pat ("[\\+\\*=!><\\-@123468]");
+          static const boost::regex symbol_pat (
+              "^(?:\\+|-|\\*|=|<|>|<=|>=|!=|(?:@|!)(?:8|16|32|64)|--)$");
+          const auto token_opt = to_token (allowed_pat, symbol_pat);
+          if (token_opt.has_value ())
+            tokens.push_back (*token_opt);
+          else
+            throw std::invalid_argument ("TODO: unknown operator error.");
+        }
       else if (ch == '\"')
         tokens.push_back (lex_string ());
-
+      else if (ch == '\'')
+        tokens.push_back (lex_char ());
       else
         throw std::invalid_argument ("Invalid character: "
                                      + std::string{ ch });
